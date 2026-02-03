@@ -1,0 +1,12 @@
+
+> remise-des-titres@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.0.3.38:3000
+- Environments: .env
+
+✓ Starting...
+✓ Ready in 1143ms
+ GET / 200 in 2.9s (compile: 2.6s, render: 287ms)
