@@ -6,7 +6,14 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(npm run build:*)",
       "Bash(ls:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(git add:*)"
     ]
   }
 }

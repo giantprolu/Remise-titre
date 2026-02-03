@@ -48,54 +48,117 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen bg-[#FAFAFA] relative">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
-        <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Remise des Titres - 4ème Année
+      <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h1 className="text-2xl md:text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
+            Remise des Titres
           </h1>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
+            {/* Mode Toggle Button - Improved UX/UI */}
             <button
               onClick={() => setMode(mode === 'live' ? 'recap' : 'live')}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2.5 bg-white hover:bg-[#A7B0BE] hover:text-white border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#2E2E2E] transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
+              aria-label={mode === 'live' ? 'Activer le mode récapitulatif' : 'Activer le mode en direct'}
             >
-              {mode === 'live' ? 'Mode Récapitulatif' : 'Mode Live'}
+              {mode === 'live' ? (
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  Mode Récapitulatif
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Mode Live
+                </span>
+              )}
             </button>
+
+            {/* Pause Button - Improved UX/UI */}
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+              className={`px-4 py-2.5 border rounded-lg text-sm font-medium transition-all duration-200 ease-in-out shadow-sm hover:shadow-md ${
+                isPaused
+                  ? 'bg-[#9FB8A0] text-white border-[#9FB8A0] hover:bg-[#8BA68C]'
+                  : 'bg-white text-[#2E2E2E] border-[#E5E7EB] hover:bg-[#F3F4F6]'
+              }`}
+              aria-label={isPaused ? 'Reprendre la mise à jour automatique' : 'Mettre en pause la mise à jour automatique'}
+              aria-pressed={isPaused}
             >
-              {isPaused ? 'Reprendre' : 'Pause'}
+              <span className="flex items-center gap-2">
+                {isPaused ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Reprendre
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pause
+                  </>
+                )}
+              </span>
             </button>
+
             <button
               onClick={handleExportPDF}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 ease-in-out shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={responses.length === 0}
+              aria-label="Exporter les réponses en PDF"
             >
-              Exporter en PDF
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Exporter PDF
+              </span>
             </button>
+
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
+              aria-label="Supprimer toutes les réponses"
             >
-              Réinitialiser
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Réinitialiser
+              </span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-24 pb-32 px-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="pt-32 pb-32 px-4 md:px-8">
+        <div className="max-w-[900px] mx-auto">
           {responses.length === 0 ? (
             <div className="text-center py-32">
-              <p className="text-2xl text-gray-400">
+              <div className="mb-6">
+                <svg className="w-20 h-20 text-[#9CA3AF] mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <p className="text-2xl font-['Playfair_Display'] text-[#6B7280] mb-2">
+                Livre d'or vide
+              </p>
+              <p className="text-base text-[#9CA3AF]">
                 En attente des premières réponses...
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
               {responses.map((response, index) => (
                 <ResponseCard
                   key={response.id}
