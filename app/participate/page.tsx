@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { QUESTIONS } from '@/types';
 import Link from 'next/link';
 
 export default function ParticipatePage() {
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     name: '',
     question1: '',
@@ -15,13 +17,82 @@ export default function ParticipatePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [hasSubmittedBefore, setHasSubmittedBefore] = useState(false);
   const [responseId, setResponseId] = useState<string | null>(null);
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [tokenError, setTokenError] = useState('');
 
   useEffect(() => {
+    // Validate token first
+    const validateToken = async () => {
+      const token = searchParams.get('token');
+
+      if (!token) {
+        setIsValidatingToken(false);
+        setIsTokenValid(false);
+        setTokenError('Aucun token fourni. Veuillez scanner le QR code pour accéder au formulaire.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+          setIsTokenValid(true);
+        } else {
+          setIsTokenValid(false);
+          setTokenError(
+            data.reason === 'Token expired'
+              ? 'Ce QR code a expiré. Veuillez scanner le nouveau QR code.'
+              : 'Token invalide. Veuillez scanner le QR code pour accéder au formulaire.'
+          );
+        }
+      } catch (error) {
+        console.error('Error validating token:', error);
+        setIsTokenValid(false);
+        setTokenError('Erreur de validation. Veuillez réessayer.');
+      } finally {
+        setIsValidatingToken(false);
+      }
+    };
+
+    validateToken();
+
     // Check if user has submitted before
     const savedResponseId = localStorage.getItem('userResponseId');
     const savedFormData = localStorage.getItem('userFormData');
+    const submissionTimestamp = localStorage.getItem('submissionTimestamp');
+    const resetTimestamp = localStorage.getItem('resetTimestamp');
 
-    if (savedResponseId) {
+    // Check if a reset happened after the user's submission
+    if (savedResponseId && submissionTimestamp && resetTimestamp) {
+      const submitted = parseInt(submissionTimestamp);
+      const reset = parseInt(resetTimestamp);
+
+      if (reset > submitted) {
+        // Reset happened after submission, clear user data to allow re-participation
+        localStorage.removeItem('userResponseId');
+        localStorage.removeItem('userFormData');
+        localStorage.removeItem('submissionTimestamp');
+        // Don't remove resetTimestamp, keep it for future checks
+      } else {
+        // User submitted after the last reset, restore their data
+        setHasSubmittedBefore(true);
+        setResponseId(savedResponseId);
+
+        if (savedFormData) {
+          setFormData(JSON.parse(savedFormData));
+        }
+      }
+    } else if (savedResponseId) {
+      // No reset timestamp exists, restore user data
       setHasSubmittedBefore(true);
       setResponseId(savedResponseId);
 
@@ -34,6 +105,7 @@ export default function ParticipatePage() {
     const handleReset = () => {
       localStorage.removeItem('userResponseId');
       localStorage.removeItem('userFormData');
+      localStorage.removeItem('submissionTimestamp');
       setHasSubmittedBefore(false);
       setResponseId(null);
       setIsSubmitted(false);
@@ -77,8 +149,10 @@ export default function ParticipatePage() {
       if (response.ok) {
         const data = await response.json();
         // Save to localStorage to prevent re-submission
+        const timestamp = Date.now().toString();
         localStorage.setItem('userResponseId', data.id);
         localStorage.setItem('userFormData', JSON.stringify(formData));
+        localStorage.setItem('submissionTimestamp', timestamp);
         setResponseId(data.id);
         setIsSubmitted(true);
         setHasSubmittedBefore(true);
@@ -92,6 +166,78 @@ export default function ParticipatePage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while validating token
+  if (isValidatingToken) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <svg
+                className="w-10 h-10 text-[#A7B0BE] animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+            Vérification...
+          </h2>
+          <p className="text-[#6B7280]">
+            Validation de votre accès en cours
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if token is invalid
+  if (!isTokenValid) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-10 h-10 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+            Accès non autorisé
+          </h2>
+          <p className="text-[#6B7280] mb-6">
+            {tokenError}
+          </p>
+          <Link
+            href="/"
+            className="inline-block px-6 py-3 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            Retour au livre d'or
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (

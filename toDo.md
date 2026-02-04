@@ -1,3 +1,0 @@
-- [x] si je clique sur réinitialiser, toutes les personnes qui ont déjà participés peuvent reparticipé
-- [x] ne plus faire de bouton live ou recapitulatif laissé en live uniquement
-- [x] pouvoir suppporter plus de 100 personnes d'un coup

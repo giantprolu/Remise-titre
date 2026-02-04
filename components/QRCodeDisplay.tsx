@@ -6,21 +6,43 @@ import QRCode from 'qrcode';
 export default function QRCodeDisplay() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [url, setUrl] = useState('');
+  const [currentToken, setCurrentToken] = useState('');
+
+  const fetchTokenAndUpdateQR = async () => {
+    try {
+      const response = await fetch('/api/token');
+      const data = await response.json();
+      const token = data.token;
+
+      setCurrentToken(token);
+      const participantUrl = `${window.location.origin}/participate?token=${token}`;
+      setUrl(participantUrl);
+
+      if (canvasRef.current) {
+        QRCode.toCanvas(canvasRef.current, participantUrl, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching token:', error);
+    }
+  };
 
   useEffect(() => {
-    const participantUrl = `${window.location.origin}/participate`;
-    setUrl(participantUrl);
+    // Fetch token immediately
+    fetchTokenAndUpdateQR();
 
-    if (canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, participantUrl, {
-        width: 200,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#ffffff'
-        }
-      });
-    }
+    // Rotate token every 10 seconds
+    const interval = setInterval(() => {
+      fetchTokenAndUpdateQR();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
