@@ -1,5 +1,2 @@
-- [ ] revoir les boutons "pause" et "Mode Recapitulatif" pour que l'ux ui soit top
-- [ ] rester sur la page de "Merci" une fois le formulaire rempli
-- [ ] rendre la police d'écriture noir sur blanc pour le RGAA
-- [ ] faire en sorte que une personne ne peut pas réécrire par contre elle peut modifier ce qu'elle a ecrit 
-- [ ] revoir le design pour qu'il soit comme dans refonte-design.md
+- [x] ne pas faire des card carré mais plutôt des nuages qui se déplaces ou comme un déroulant afin que le site soit plus animé
+- [x] chnager de police ou de couleur a chaque personne aléatoirement
