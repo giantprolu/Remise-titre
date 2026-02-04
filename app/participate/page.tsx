@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { QUESTIONS } from '@/types';
 import Link from 'next/link';
 
-export default function ParticipatePage() {
+function ParticipateForm() {
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     name: '',
@@ -421,5 +421,43 @@ export default function ParticipatePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ParticipatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
+            <div className="mb-6">
+              <div className="w-20 h-20 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <svg
+                  className="w-10 h-10 text-[#A7B0BE] animate-spin"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+              Chargement...
+            </h2>
+            <p className="text-[#6B7280]">
+              Préparation du formulaire
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <ParticipateForm />
+    </Suspense>
   );
 }
