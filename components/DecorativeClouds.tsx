@@ -19,12 +19,12 @@ const COLORS = [
   { bg: 'rgba(255, 235, 238, 0.95)', border: '#F08080', text: '#C62828' }, // Corail
 ];
 
-// Formes de nuages
+// Formes de nuages moins prononcées pour éviter le débordement
 const CLOUD_SHAPES = [
-  '60% 40% 70% 30% / 60% 50% 50% 40%',
-  '50% 50% 40% 60% / 40% 60% 40% 60%',
-  '70% 30% 50% 50% / 50% 70% 30% 50%',
-  '40% 60% 60% 40% / 60% 40% 60% 40%',
+  '55% 45% 50% 50% / 50% 50% 50% 50%',
+  '50% 50% 48% 52% / 48% 52% 48% 52%',
+  '52% 48% 50% 50% / 50% 52% 48% 50%',
+  '48% 52% 52% 48% / 52% 48% 52% 48%',
 ];
 
 export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
@@ -78,11 +78,12 @@ export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
               background: cloud.color.bg,
               borderRadius: cloud.shape,
               border: `3px solid ${cloud.color.border}`,
-              padding: '2rem',
-              minWidth: '400px',
-              maxWidth: '500px',
+              padding: '3rem 4rem',
+              minWidth: '450px',
+              maxWidth: '550px',
               backdropFilter: 'blur(8px)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+              overflow: 'hidden',
             }}
           >
             {/* Nom */}
