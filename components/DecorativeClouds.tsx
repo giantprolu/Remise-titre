@@ -84,11 +84,16 @@ export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
               backdropFilter: 'blur(8px)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
               overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
             }}
           >
             {/* Nom */}
             <h3
-              className="text-xl font-bold font-['Playfair_Display'] mb-3 pb-3 border-b-2"
+              className="text-2xl font-bold font-['Playfair_Display'] mb-4 pb-3 border-b-2 w-full text-center"
               style={{
                 color: cloud.color.text,
                 borderColor: cloud.color.border,
@@ -98,7 +103,7 @@ export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
             </h3>
 
             {/* Contenu */}
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               {/* Question 1 */}
               <div>
                 <p className="text-xs font-medium uppercase mb-1" style={{ color: cloud.color.text, opacity: 0.7 }}>
@@ -132,7 +137,7 @@ export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
 
             {/* Date */}
             <time
-              className="text-xs mt-3 block opacity-60"
+              className="text-xs mt-4 block opacity-60 text-center w-full"
               style={{ color: cloud.color.text }}
               dateTime={new Date(cloud.response.createdAt).toISOString()}
             >
