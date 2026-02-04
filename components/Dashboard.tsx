@@ -50,8 +50,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] relative">
-      {/* Nuages décoratifs en arrière-plan */}
-      <DecorativeClouds count={10} />
+      {/* Nuages avec les réponses */}
+      <DecorativeClouds responses={responses} />
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-20 shadow-sm">
@@ -144,10 +144,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="pt-32 pb-32 px-4 md:px-8 relative z-10">
-        <div className="max-w-[900px] mx-auto">
-          {responses.length === 0 ? (
+      {/* Main Content - Message si vide */}
+      {responses.length === 0 && (
+        <main className="pt-32 pb-32 px-4 md:px-8 relative z-10">
+          <div className="max-w-[900px] mx-auto">
             <div className="text-center py-32">
               <div className="mb-6">
                 <svg className="w-20 h-20 text-[#9CA3AF] mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,21 +160,13 @@ export default function Dashboard() {
               <p className="text-base text-[#9CA3AF]">
                 En attente des premières réponses...
               </p>
+              <p className="text-sm text-[#9CA3AF] mt-4">
+                ☁️ Les réponses apparaîtront sous forme de nuages flottants
+              </p>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {responses.map((response, index) => (
-                <ResponseCard
-                  key={response.id}
-                  response={response}
-                  index={index}
-                  mode={mode}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+          </div>
+        </main>
+      )}
 
       {/* QR Code */}
       <QRCodeDisplay />
