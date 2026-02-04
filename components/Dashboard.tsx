@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Response } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
 import ResponseCard from './ResponseCard';
+import DecorativeClouds from './DecorativeClouds';
 import { generatePDF } from '@/lib/pdf';
 
 export default function Dashboard() {
@@ -49,8 +50,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] relative">
+      {/* Nuages décoratifs en arrière-plan */}
+      <DecorativeClouds count={10} />
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-10 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h1 className="text-2xl md:text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
             Remise des Titres
@@ -141,7 +145,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="pt-32 pb-32 px-4 md:px-8">
+      <main className="pt-32 pb-32 px-4 md:px-8 relative z-10">
         <div className="max-w-[900px] mx-auto">
           {responses.length === 0 ? (
             <div className="text-center py-32">
