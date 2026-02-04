@@ -10,31 +10,23 @@ interface ResponseCardProps {
   mode: 'live' | 'recap';
 }
 
-// Palette de couleurs pastels et chaleureuses
+// Palette de couleurs avec fond blanc et bordures colorées
 const COLORS = [
-  { bg: '#FFF4E6', border: '#FFE4C4', text: '#8B4513' }, // Beige chaud
-  { bg: '#E8F5E9', border: '#C8E6C9', text: '#2E7D32' }, // Vert sage
-  { bg: '#E3F2FD', border: '#BBDEFB', text: '#1565C0' }, // Bleu clair
-  { bg: '#FCE4EC', border: '#F8BBD0', text: '#C2185B' }, // Rose poudré
-  { bg: '#F3E5F5', border: '#E1BEE7', text: '#7B1FA2' }, // Lavande
-  { bg: '#FFF9C4', border: '#FFF59D', text: '#F57F17' }, // Jaune doux
-  { bg: '#FFEBEE', border: '#FFCDD2', text: '#C62828' }, // Rouge doux
+  { bg: '#FFFFFF', border: '#F4A460', accent: '#F4A460', name: 'Sable' }, // Sable
+  { bg: '#FFFFFF', border: '#90C695', accent: '#90C695', name: 'Vert' }, // Vert sage
+  { bg: '#FFFFFF', border: '#7EB6D9', accent: '#7EB6D9', name: 'Bleu' }, // Bleu ciel
+  { bg: '#FFFFFF', border: '#E8A5C0', accent: '#E8A5C0', name: 'Rose' }, // Rose
+  { bg: '#FFFFFF', border: '#B5A8D6', accent: '#B5A8D6', name: 'Lavande' }, // Lavande
+  { bg: '#FFFFFF', border: '#F5D547', accent: '#F5D547', name: 'Jaune' }, // Jaune
+  { bg: '#FFFFFF', border: '#F08080', accent: '#F08080', name: 'Corail' }, // Corail
 ];
 
-// Variations de polices
-const FONTS = [
-  "'Playfair Display', serif",
-  "'Inter', sans-serif",
-  "Georgia, serif",
-  "'Courier New', monospace",
-];
-
-// Formes de nuages (en utilisant border-radius)
+// Formes de nuages plus subtiles
 const CLOUD_SHAPES = [
-  '60% 40% 70% 30% / 60% 50% 50% 40%',
-  '50% 50% 40% 60% / 40% 60% 40% 60%',
-  '70% 30% 50% 50% / 50% 70% 30% 50%',
-  '40% 60% 60% 40% / 60% 40% 60% 40%',
+  '60% 40% 55% 45% / 55% 50% 50% 45%',
+  '55% 45% 45% 55% / 45% 55% 45% 55%',
+  '65% 35% 50% 50% / 50% 65% 35% 50%',
+  '45% 55% 55% 45% / 55% 45% 55% 45%',
 ];
 
 export default function ResponseCard({ response, index, mode }: ResponseCardProps) {
@@ -42,46 +34,37 @@ export default function ResponseCard({ response, index, mode }: ResponseCardProp
   const cardStyle = useMemo(() => {
     const seed = response.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colorIndex = seed % COLORS.length;
-    const fontIndex = Math.floor(seed / COLORS.length) % FONTS.length;
-    const shapeIndex = Math.floor(seed / (COLORS.length * FONTS.length)) % CLOUD_SHAPES.length;
-    const rotation = (seed % 7) - 3; // Rotation entre -3 et 3 degrés
+    const shapeIndex = Math.floor(seed / COLORS.length) % CLOUD_SHAPES.length;
     const floatDelay = (seed % 10) * 0.5; // Délai pour l'animation de flottement
 
     return {
       color: COLORS[colorIndex],
-      font: FONTS[fontIndex],
       shape: CLOUD_SHAPES[shapeIndex],
-      rotation,
       floatDelay,
     };
   }, [response.id]);
 
   return (
     <article
-      className="relative p-8 shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in hover:scale-105"
+      className="relative p-8 shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in"
       style={{
         background: cardStyle.color.bg,
         borderRadius: cardStyle.shape,
-        border: `2px solid ${cardStyle.color.border}`,
-        transform: `rotate(${cardStyle.rotation}deg)`,
+        border: `3px solid ${cardStyle.color.border}`,
         animationDelay: `${index * 0.05}s`,
         animation: `fade-in 0.5s ease-out forwards ${index * 0.05}s, float 6s ease-in-out infinite ${cardStyle.floatDelay}s`,
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b opacity-30" style={{ borderColor: cardStyle.color.text }}>
+      <div className="flex items-center justify-between mb-6 pb-4 border-b-2" style={{ borderColor: cardStyle.color.accent }}>
         <h3
-          className="text-2xl font-bold"
-          style={{
-            color: cardStyle.color.text,
-            fontFamily: cardStyle.font
-          }}
+          className="text-2xl font-bold font-['Playfair_Display']"
+          style={{ color: cardStyle.color.accent }}
         >
           {response.name}
         </h3>
         <time
-          className="text-sm opacity-70"
-          style={{ color: cardStyle.color.text }}
+          className="text-sm text-[#6B7280]"
           dateTime={new Date(response.createdAt).toISOString()}
         >
           {new Date(response.createdAt).toLocaleDateString('fr-FR', {
@@ -101,30 +84,30 @@ export default function ResponseCard({ response, index, mode }: ResponseCardProp
       <div className="space-y-6">
         {/* Question 1 */}
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider mb-2 opacity-60" style={{ color: cardStyle.color.text }}>
+          <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: cardStyle.color.accent }}>
             {QUESTIONS[0].label}
           </p>
-          <p className="text-base leading-relaxed" style={{ color: cardStyle.color.text }}>
+          <p className="text-base leading-relaxed text-[#2E2E2E]">
             {response.question1}
           </p>
         </div>
 
         {/* Question 2 */}
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider mb-2 opacity-60" style={{ color: cardStyle.color.text }}>
+          <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: cardStyle.color.accent }}>
             {QUESTIONS[1].label}
           </p>
-          <p className="text-lg font-semibold leading-relaxed" style={{ color: cardStyle.color.text }}>
+          <p className="text-lg font-semibold leading-relaxed text-[#2E2E2E]">
             "{response.question2}"
           </p>
         </div>
 
         {/* Question 3 */}
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider mb-2 opacity-60" style={{ color: cardStyle.color.text }}>
+          <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: cardStyle.color.accent }}>
             {QUESTIONS[2].label}
           </p>
-          <p className="text-base leading-relaxed italic" style={{ color: cardStyle.color.text }}>
+          <p className="text-base leading-relaxed italic text-[#2E2E2E]">
             {response.question3}
           </p>
         </div>
