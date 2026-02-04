@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Response } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
 import DecorativeClouds from './DecorativeClouds';
@@ -9,6 +9,16 @@ import { generatePDF } from '@/lib/pdf';
 export default function Dashboard() {
   const [responses, setResponses] = useState<Response[]>([]);
   const [isPaused, setIsPaused] = useState(false);
+
+  const fetchResponses = useCallback(async () => {
+    try {
+      const res = await fetch('/api/responses');
+      const data = await res.json();
+      setResponses(data);
+    } catch (error) {
+      console.error('Error fetching responses:', error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchResponses();
@@ -19,17 +29,7 @@ export default function Dashboard() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
-
-  const fetchResponses = async () => {
-    try {
-      const res = await fetch('/api/responses');
-      const data = await res.json();
-      setResponses(data);
-    } catch (error) {
-      console.error('Error fetching responses:', error);
-    }
-  };
+  }, [isPaused, fetchResponses]);
 
   const handleReset = async () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer toutes les réponses? Cela permettra à tout le monde de reparticiper.')) {
@@ -135,7 +135,7 @@ export default function Dashboard() {
                 </svg>
               </div>
               <p className="text-2xl font-['Playfair_Display'] text-[#6B7280] mb-2">
-                Livre d'or vide
+                Livre d&apos;or vide
               </p>
               <p className="text-base text-[#9CA3AF]">
                 En attente des premières réponses...

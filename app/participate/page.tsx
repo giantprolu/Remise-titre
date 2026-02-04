@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { QUESTIONS } from '@/types';
-import Link from 'next/link';
 
 function ParticipateForm() {
   const searchParams = useSearchParams();
@@ -16,7 +15,7 @@ function ParticipateForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [hasSubmittedBefore, setHasSubmittedBefore] = useState(false);
-  const [responseId, setResponseId] = useState<string | null>(null);
+  const [, setResponseId] = useState<string | null>(null);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
   const [tokenError, setTokenError] = useState('');
@@ -71,19 +70,30 @@ function ParticipateForm() {
     const submissionTimestamp = localStorage.getItem('submissionTimestamp');
     const resetTimestamp = localStorage.getItem('resetTimestamp');
 
+    // If there's a reset timestamp but the saved data doesn't have a submission timestamp,
+    // it means the data is from before the reset feature - clear it
+    if (savedResponseId && resetTimestamp && !submissionTimestamp) {
+      console.log('[Participate] Clearing old data without submission timestamp');
+      localStorage.removeItem('userResponseId');
+      localStorage.removeItem('userFormData');
+      // Don't set hasSubmittedBefore - user can participate again
+    }
     // Check if a reset happened after the user's submission
-    if (savedResponseId && submissionTimestamp && resetTimestamp) {
+    else if (savedResponseId && submissionTimestamp && resetTimestamp) {
       const submitted = parseInt(submissionTimestamp);
       const reset = parseInt(resetTimestamp);
 
       if (reset > submitted) {
         // Reset happened after submission, clear user data to allow re-participation
+        console.log('[Participate] Reset detected after submission, clearing data');
         localStorage.removeItem('userResponseId');
         localStorage.removeItem('userFormData');
         localStorage.removeItem('submissionTimestamp');
         // Don't remove resetTimestamp, keep it for future checks
+        // Don't set hasSubmittedBefore - user can participate again
       } else {
         // User submitted after the last reset, restore their data
+        console.log('[Participate] Restoring user data from after last reset');
         setHasSubmittedBefore(true);
         setResponseId(savedResponseId);
 
@@ -91,8 +101,9 @@ function ParticipateForm() {
           setFormData(JSON.parse(savedFormData));
         }
       }
-    } else if (savedResponseId) {
-      // No reset timestamp exists, restore user data
+    } else if (savedResponseId && !resetTimestamp) {
+      // No reset has ever happened, restore user data
+      console.log('[Participate] No reset timestamp, restoring user data');
       setHasSubmittedBefore(true);
       setResponseId(savedResponseId);
 
@@ -122,7 +133,7 @@ function ParticipateForm() {
     return () => {
       window.removeEventListener('responsesReset', handleReset);
     };
-  }, []);
+  }, [searchParams]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -228,12 +239,6 @@ function ParticipateForm() {
           <p className="text-[#6B7280] mb-6">
             {tokenError}
           </p>
-          <Link
-            href="/"
-            className="inline-block px-6 py-3 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            Retour au livre d'or
-          </Link>
         </div>
       </div>
     );
@@ -264,15 +269,9 @@ function ParticipateForm() {
             Merci !
           </h2>
           <p className="text-[#6B7280] text-lg mb-6">
-            Votre message a été enregistré avec succès dans le livre d'or.
+            Votre message a été enregistré avec succès dans le livre d&apos;or.
           </p>
           <div className="flex flex-col gap-3">
-            <Link
-              href="/"
-              className="px-6 py-3 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              Voir le livre d'or
-            </Link>
             <button
               onClick={() => {
                 setIsSubmitted(false);
@@ -410,13 +409,6 @@ function ParticipateForm() {
                   ? 'Mettre à jour mon message'
                   : 'Signer le livre d\'or'}
             </button>
-
-            <Link
-              href="/"
-              className="block text-center text-[#6B7280] hover:text-[#2E2E2E] text-sm transition-colors"
-            >
-              ← Retour au livre d'or
-            </Link>
           </form>
         </div>
       </div>
