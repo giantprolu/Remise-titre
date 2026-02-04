@@ -3,13 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Response } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
-import ResponseCard from './ResponseCard';
 import DecorativeClouds from './DecorativeClouds';
 import { generatePDF } from '@/lib/pdf';
 
 export default function Dashboard() {
   const [responses, setResponses] = useState<Response[]>([]);
-  const [mode, setMode] = useState<'live' | 'recap'>('live');
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
@@ -34,10 +32,15 @@ export default function Dashboard() {
   };
 
   const handleReset = async () => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer toutes les réponses?')) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer toutes les réponses? Cela permettra à tout le monde de reparticiper.')) {
       try {
         await fetch('/api/responses', { method: 'DELETE' });
         setResponses([]);
+        // Broadcast reset event to allow re-participation
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('resetTimestamp', Date.now().toString());
+          window.dispatchEvent(new CustomEvent('responsesReset'));
+        }
       } catch (error) {
         console.error('Error resetting responses:', error);
       }
@@ -60,29 +63,6 @@ export default function Dashboard() {
             Remise des Titres
           </h1>
           <div className="flex flex-wrap gap-2">
-            {/* Mode Toggle Button - Improved UX/UI */}
-            <button
-              onClick={() => setMode(mode === 'live' ? 'recap' : 'live')}
-              className="px-4 py-2.5 bg-white hover:bg-[#A7B0BE] hover:text-white border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#2E2E2E] transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-              aria-label={mode === 'live' ? 'Activer le mode récapitulatif' : 'Activer le mode en direct'}
-            >
-              {mode === 'live' ? (
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                  Mode Récapitulatif
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Mode Live
-                </span>
-              )}
-            </button>
-
             {/* Pause Button - Improved UX/UI */}
             <button
               onClick={() => setIsPaused(!isPaused)}

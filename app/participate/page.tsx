@@ -29,6 +29,27 @@ export default function ParticipatePage() {
         setFormData(JSON.parse(savedFormData));
       }
     }
+
+    // Listen for reset events to allow re-participation
+    const handleReset = () => {
+      localStorage.removeItem('userResponseId');
+      localStorage.removeItem('userFormData');
+      setHasSubmittedBefore(false);
+      setResponseId(null);
+      setIsSubmitted(false);
+      setFormData({
+        name: '',
+        question1: '',
+        question2: '',
+        question3: ''
+      });
+    };
+
+    window.addEventListener('responsesReset', handleReset);
+
+    return () => {
+      window.removeEventListener('responsesReset', handleReset);
+    };
   }, []);
 
   const handleChange = (
