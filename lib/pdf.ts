@@ -215,7 +215,7 @@ export function generateAlbumPDF(responses: Response[]) {
 
   const cellW = availW / ALBUM_COLS;          // ≈ 85mm
   const cellH = availH / ALBUM_ROWS;          // ≈ 85mm
-  const photoSz = Math.min(cellW, cellH - 22); // carré, laisse 22mm pour le texte
+  const photoSz = Math.min(cellW * 0.75, cellH - 30); // carré, laisse 30mm pour le texte
 
   // ── Couverture ──────────────────────────────────────────────────────────────
   doc.setFillColor(...NAVY);
