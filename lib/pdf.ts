@@ -2,225 +2,341 @@ import { jsPDF } from 'jspdf';
 import { Response } from '@/types';
 import { QUESTIONS } from '@/types';
 
-const TODAY = () =>
-  new Date().toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+const DATE_STR = () =>
+  new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-// ─── PDF classique (toutes les questions) ────────────────────────────────────
+const YEAR = new Date().getFullYear();
+
+// ─── Couleurs ─────────────────────────────────────────────────────────────────
+const NAVY  = [15,  30,  70]  as const; // fond couverture / bandeau
+const SAGE  = [159, 184, 160] as const; // accent vert sauge
+const SAND  = [214, 211, 196] as const; // ligne décorative claire
+const DARK  = [30,  30,  30]  as const; // texte principal
+const MID   = [100, 100, 100] as const; // texte secondaire
+const LIGHT = [180, 180, 180] as const; // texte tertiaire / bordures
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function hline(doc: jsPDF, x: number, y: number, w: number, r: number, g: number, b: number, lw = 0.4) {
+  doc.setDrawColor(r, g, b);
+  doc.setLineWidth(lw);
+  doc.line(x, y, x + w, y);
+}
+
+// ─── PDF Livre d'Or (2 personnes / page, design soigné) ───────────────────────
 
 export function generateClassicPDF(responses: Response[]) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  const maxWidth = pageWidth - 2 * margin;
+  const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const PW   = doc.internal.pageSize.getWidth();   // 210
+  const PH   = doc.internal.pageSize.getHeight();  // 297
+  const mH   = 18;                                  // marge horizontale
+  const cW   = PW - 2 * mH;                        // largeur de contenu
 
-  // Cover
-  doc.setFontSize(32);
+  // ── Couverture ──────────────────────────────────────────────────────────────
+  // Fond sable clair en pleine page
+  doc.setFillColor(250, 248, 244);
+  doc.rect(0, 0, PW, PH, 'F');
+
+  // Bande latérale gauche navy
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, 6, PH, 'F');
+
+  // Ligne décorative à droite de la bande
+  doc.setDrawColor(...SAGE);
+  doc.setLineWidth(0.8);
+  doc.line(6, 0, 6, PH);
+
+  // Grand titre
+  doc.setFontSize(48);
   doc.setFont('helvetica', 'bold');
-  doc.text('Livre d\'Or', pageWidth / 2, 80, { align: 'center' });
-  doc.setFontSize(24);
+  doc.setTextColor(...NAVY);
+  doc.text('Livre d\'Or', PW / 2, 105, { align: 'center' });
+
+  // Ligne décorative sous le titre
+  hline(doc, mH + 20, 114, cW - 40, ...SAGE, 1);
+
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'normal');
-  doc.text('Remise des Titres', pageWidth / 2, 100, { align: 'center' });
-  doc.setFontSize(14);
-  doc.text(TODAY(), pageWidth / 2, 118, { align: 'center' });
-  doc.setFontSize(10);
+  doc.setTextColor(...MID);
+  doc.text('Remise des Titres', PW / 2, 128, { align: 'center' });
+
+  doc.setFontSize(13);
+  doc.setTextColor(...LIGHT);
+  doc.text(DATE_STR(), PW / 2, 141, { align: 'center' });
+
+  doc.setFontSize(11);
+  doc.setTextColor(...MID);
   doc.text(
     `${responses.length} participant${responses.length > 1 ? 's' : ''}`,
-    pageWidth / 2,
-    132,
-    { align: 'center' }
+    PW / 2, 156, { align: 'center' }
   );
 
-  responses.forEach((response, index) => {
+  // Millésime en grand en bas
+  doc.setFontSize(72);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...SAND);
+  doc.text(String(YEAR), PW / 2, 260, { align: 'center' });
+
+  // ── Pages de réponses (2 par page) ─────────────────────────────────────────
+  const perPage    = 2;
+  const sectionH   = 124; // hauteur par section (2 × 124 + 2*marges = 294 ≈ PH)
+  const topMargin  = 14;
+
+  for (let p = 0; p < Math.ceil(responses.length / perPage); p++) {
     doc.addPage();
-    let y = margin;
 
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text(response.name, margin, y);
-    y += 5;
+    // Fond
+    doc.setFillColor(250, 248, 244);
+    doc.rect(0, 0, PW, PH, 'F');
 
-    doc.setFontSize(9);
+    // Bande latérale gauche navy
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 0, 6, PH, 'F');
+
+    // Footer
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(128, 128, 128);
-    doc.text(
-      new Date(response.createdAt).toLocaleDateString('fr-FR', {
-        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
-      }),
-      margin,
-      y
-    );
-    y += 15;
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(...LIGHT);
+    doc.text(`Remise des Titres · ${YEAR}`, mH, PH - 8);
+    doc.text(`${p + 2} / ${Math.ceil(responses.length / perPage) + 1}`, PW - mH, PH - 8, { align: 'right' });
+    hline(doc, mH, PH - 13, cW, ...SAND);
 
-    ([
-      { label: QUESTIONS[0].label, text: response.question1, style: 'normal' as const },
-      { label: QUESTIONS[1].label, text: response.question2, style: 'bold' as const },
-      { label: QUESTIONS[2].label, text: response.question3, style: 'italic' as const },
-    ]).forEach(({ label, text, style }) => {
-      doc.setFontSize(11);
+    for (let slot = 0; slot < perPage; slot++) {
+      const idx = p * perPage + slot;
+      if (idx >= responses.length) break;
+      const r = responses[idx];
+      const yBase = topMargin + slot * sectionH;
+
+      // ── En-tête nom ──────────────────────────────────────────────────────
+      const nameBarH = 20;
+
+      // Bloc nom : fond sage très léger
+      doc.setFillColor(240, 246, 241);
+      doc.rect(mH, yBase, cW, nameBarH, 'F');
+
+      // Trait gauche accent
+      doc.setFillColor(...SAGE);
+      doc.rect(mH, yBase, 3, nameBarH, 'F');
+
+      // Photo si disponible
+      const hasPhoto = !!r.photo;
+      const photoSz = 16;
+      if (hasPhoto) {
+        doc.addImage(r.photo!, 'JPEG', PW - mH - photoSz, yBase + 2, photoSz, photoSz);
+      }
+
+      // Nom
+      doc.setFontSize(15);
       doc.setFont('helvetica', 'bold');
-      doc.text(label, margin, y);
-      y += 7;
-      doc.setFont('helvetica', style);
-      doc.setFontSize(11);
-      const lines = doc.splitTextToSize(text, maxWidth);
-      doc.text(lines, margin, y);
-      y += lines.length * 6 + 10;
-    });
+      doc.setTextColor(...NAVY);
+      doc.text(r.name, mH + 8, yBase + 9);
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(128, 128, 128);
-    doc.text(`${index + 2} / ${responses.length + 1}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-  });
+      // Date
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...MID);
+      const dateStr = new Date(r.createdAt).toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      });
+      doc.text(dateStr, mH + 8, yBase + 16);
+
+      // ── Questions ────────────────────────────────────────────────────────
+      const qItems = [
+        { label: QUESTIONS[0].label, text: r.question1, style: 'normal' as const },
+        { label: QUESTIONS[1].label, text: r.question2, style: 'bolditalic' as const },
+        { label: QUESTIONS[2].label, text: r.question3, style: 'italic' as const },
+      ];
+
+      let y = yBase + nameBarH + 7;
+
+      qItems.forEach(({ label, text, style }, qi) => {
+        // Numéro de question dans un petit cercle accent
+        doc.setFillColor(...SAGE);
+        doc.circle(mH + 3, y - 1, 3, 'F');
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text(String(qi + 1), mH + 3, y + 0.5, { align: 'center' });
+
+        // Label question
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...SAGE);
+        doc.text(label.toUpperCase(), mH + 9, y);
+
+        y += 5.5;
+
+        // Texte réponse
+        doc.setFontSize(10);
+        doc.setFont('helvetica', style === 'bolditalic' ? 'bolditalic' : style);
+        doc.setTextColor(...DARK);
+        const lines = doc.splitTextToSize(text, cW - (hasPhoto && qi === 0 ? photoSz + 6 : 0) - 10);
+        const maxLines = 3;
+        const clipped = lines.slice(0, maxLines) as string[];
+        if (lines.length > maxLines) clipped[maxLines - 1] = (clipped[maxLines - 1] as string).replace(/.{0,3}$/, '…');
+        doc.text(clipped, mH + 9, y, { lineHeightFactor: 1.4 });
+        y += clipped.length * 6 + 5;
+      });
+
+      // Séparateur entre les deux sections (sauf dernière)
+      if (slot === 0 && p * perPage + 1 < responses.length) {
+        const sepY = topMargin + sectionH;
+        hline(doc, mH, sepY, cW, ...SAND, 0.6);
+        // Petit losange décoratif au centre du séparateur
+        doc.setFillColor(...SAND);
+        doc.rect(PW / 2 - 2, sepY - 2, 4, 4, 'F');
+      }
+    }
+  }
 
   doc.save(`livre-or-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-// ─── PDF album (style yearbook américain) ────────────────────────────────────
+// ─── PDF Album (paysage, style yearbook américain) ────────────────────────────
+// Layout : 3 colonnes × 2 lignes = 6 par page, A4 paysage
 
-// Layout : 3 colonnes × 3 lignes = 9 entrées par page
-// Chaque entrée : photo carrée → nom bold → année → citation italic
-
-const ALBUM_COLS = 3;
-const ALBUM_ROWS = 3;
+const ALBUM_COLS    = 3;
+const ALBUM_ROWS    = 2;
 const ALBUM_PER_PAGE = ALBUM_COLS * ALBUM_ROWS;
 
 export function generateAlbumPDF(responses: Response[]) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const PW = doc.internal.pageSize.getWidth();   // 210
-  const PH = doc.internal.pageSize.getHeight();  // 297
-  const year = new Date().getFullYear();
+  const doc  = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const PW   = doc.internal.pageSize.getWidth();   // 297
+  const PH   = doc.internal.pageSize.getHeight();  // 210
 
-  // Marges et espacements
-  const mH = 10;   // marge horizontale
-  const mV = 14;   // marge verticale
-  const gH = 6;    // espace entre colonnes
-  const gV = 8;    // espace entre lignes
+  const HEADER_H = 12;
+  const mH = 10;
+  const mV = 10;
+  const gH = 8;
+  const gV = 8;
 
-  // Dimensions d'une cellule
-  const cellW = (PW - 2 * mH - (ALBUM_COLS - 1) * gH) / ALBUM_COLS; // ≈ 56mm
-  // Photo : carrée, prend toute la largeur de la cellule
-  const photoH = cellW; // carré
-  // Zone texte sous la photo : nom (4.5mm) + année (3.5mm) + citation (jusqu'à 3 lignes ≈ 9mm) + padding = ~20mm
-  const textZone = 20;
-  const cellH = photoH + textZone;
+  // Zone disponible après header + marges
+  const availW = PW - 2 * mH - (ALBUM_COLS - 1) * gH;
+  const availH = PH - HEADER_H - mV - (ALBUM_ROWS - 1) * gV;
 
-  // ── Page de couverture ─────────────────────────────────────────────────────
-  // Fond bleu marine style yearbook
-  doc.setFillColor(15, 30, 70);
+  const cellW = availW / ALBUM_COLS;          // ≈ 85mm
+  const cellH = availH / ALBUM_ROWS;          // ≈ 85mm
+  const photoSz = Math.min(cellW, cellH - 22); // carré, laisse 22mm pour le texte
+
+  // ── Couverture ──────────────────────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
   doc.rect(0, 0, PW, PH, 'F');
 
-  // Titre
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(42);
-  doc.setFont('helvetica', 'bold');
-  doc.text('ALBUM PROMO', PW / 2, 110, { align: 'center' });
-
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Remise des Titres', PW / 2, 130, { align: 'center' });
+  // Bande sage en bas
+  doc.setFillColor(...SAGE);
+  doc.rect(0, PH - 18, PW, 18, 'F');
 
   doc.setFontSize(52);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(200, 210, 240);
-  doc.text(String(year), PW / 2, 175, { align: 'center' });
+  doc.setTextColor(255, 255, 255);
+  doc.text('ALBUM PROMO', PW / 2, 90, { align: 'center' });
 
-  doc.setFontSize(10);
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(160, 175, 210);
-  doc.text(
-    `${responses.length} participant${responses.length > 1 ? 's' : ''}`,
-    PW / 2, 195, { align: 'center' }
-  );
+  doc.setTextColor(200, 210, 240);
+  doc.text('Remise des Titres', PW / 2, 112, { align: 'center' });
 
-  // ── Pages grille ──────────────────────────────────────────────────────────
+  doc.setFontSize(9);
+  doc.setTextColor(160, 200, 165);
+  doc.text(`${responses.length} participant${responses.length > 1 ? 's' : ''}  ·  ${DATE_STR()}`, PW / 2, 126, { align: 'center' });
+
+  // Année dans la bande basse
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text(String(YEAR), PW / 2, PH - 5, { align: 'center' });
+
+  // ── Pages grille ────────────────────────────────────────────────────────────
   responses.forEach((response, i) => {
     const posInPage = i % ALBUM_PER_PAGE;
+
     if (posInPage === 0) {
       doc.addPage();
-      // Fond blanc
-      doc.setFillColor(255, 255, 255);
+
+      // Fond ivoire
+      doc.setFillColor(252, 250, 246);
       doc.rect(0, 0, PW, PH, 'F');
-      // Bande de titre en haut
-      doc.setFillColor(15, 30, 70);
-      doc.rect(0, 0, PW, 10, 'F');
+
+      // Bandeau header navy
+      doc.setFillColor(...NAVY);
+      doc.rect(0, 0, PW, HEADER_H, 'F');
+
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(200, 210, 240);
-      doc.text(`REMISE DES TITRES  ·  ${year}`, PW / 2, 6.5, { align: 'center' });
+      doc.text(`REMISE DES TITRES  ·  ${YEAR}`, PW / 2, 7.5, { align: 'center' });
+
+      // Trait accent sage sous le header
+      doc.setDrawColor(...SAGE);
+      doc.setLineWidth(0.8);
+      doc.line(0, HEADER_H, PW, HEADER_H);
     }
 
     const col = posInPage % ALBUM_COLS;
     const row = Math.floor(posInPage / ALBUM_COLS);
-    const x = mH + col * (cellW + gH);
-    const y = 12 + row * (cellH + gV); // 12 = sous la bande titre
+    const cx  = mH + col * (cellW + gH);
+    const cy  = HEADER_H + mV + row * (cellH + gV);
 
-    // ── Photo ──────────────────────────────────────────────────────────────
-    // Fond gris clair (visible aussi avec photo)
-    doc.setFillColor(235, 235, 235);
-    doc.rect(x, y, cellW, photoH, 'F');
+    // ── Photo ────────────────────────────────────────────────────────────────
+    const photoX = cx + (cellW - photoSz) / 2;
+    const photoY = cy;
+
+    // Fond placeholder
+    doc.setFillColor(228, 228, 228);
+    doc.rect(photoX, photoY, photoSz, photoSz, 'F');
 
     if (response.photo) {
-      doc.addImage(response.photo, 'JPEG', x, y, cellW, photoH);
+      doc.addImage(response.photo, 'JPEG', photoX, photoY, photoSz, photoSz);
     } else {
-      // Placeholder avec initiales
-      const initials = response.name
-        .split(' ')
-        .map((n) => n[0] ?? '')
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-      doc.setFontSize(18);
+      // Initiales centrées
+      const initials = response.name.split(' ').map((n) => n[0] ?? '').join('').toUpperCase().slice(0, 2);
+      doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(180, 180, 180);
-      doc.text(initials, x + cellW / 2, y + photoH / 2 + 3, { align: 'center' });
+      doc.setTextColor(...LIGHT);
+      doc.text(initials, photoX + photoSz / 2, photoY + photoSz / 2 + 4, { align: 'center' });
     }
 
-    // Fine bordure autour de la photo
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.rect(x, y, cellW, photoH);
+    // Bordure fine autour de la photo
+    doc.setDrawColor(...LIGHT);
+    doc.setLineWidth(0.25);
+    doc.rect(photoX, photoY, photoSz, photoSz);
 
-    // ── Nom ────────────────────────────────────────────────────────────────
-    const nameY = y + photoH + 4.5;
-    doc.setFontSize(8.5);
+    // ── Texte sous la photo ───────────────────────────────────────────────────
+    const textY = photoY + photoSz + 5;
+
+    // Trait accent sage centré
+    const traitW = Math.min(cellW * 0.5, 30);
+    doc.setDrawColor(...SAGE);
+    doc.setLineWidth(0.8);
+    doc.line(cx + cellW / 2 - traitW / 2, textY - 2, cx + cellW / 2 + traitW / 2, textY - 2);
+
+    // Nom
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 20);
-    // Tronquer si trop long
-    const nameText = doc.splitTextToSize(response.name, cellW)[0] ?? response.name;
-    doc.text(nameText, x + cellW / 2, nameY, { align: 'center' });
+    doc.setTextColor(...DARK);
+    const nameText = doc.splitTextToSize(response.name, cellW)[0] as string;
+    doc.text(nameText, cx + cellW / 2, textY + 3, { align: 'center' });
 
-    // ── Année ─────────────────────────────────────────────────────────────
-    doc.setFontSize(6.5);
+    // Année
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(130, 130, 130);
-    doc.text(String(year), x + cellW / 2, nameY + 4, { align: 'center' });
+    doc.setTextColor(...LIGHT);
+    doc.text(String(YEAR), cx + cellW / 2, textY + 8, { align: 'center' });
 
-    // ── Citation (Q3) ──────────────────────────────────────────────────────
+    // Citation Q3
     if (response.question3) {
-      doc.setFontSize(6.5);
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'italic');
-      doc.setTextColor(70, 70, 70);
-      const raw = `"${response.question3}"`;
-      const lines = doc.splitTextToSize(raw, cellW - 2);
-      const maxLines = 3;
-      const clipped = lines.slice(0, maxLines) as string[];
-      if (lines.length > maxLines) {
-        clipped[maxLines - 1] = (clipped[maxLines - 1] as string).replace(/.{1,3}$/, '…');
-      }
-      doc.text(clipped, x + cellW / 2, nameY + 9, { align: 'center', lineHeightFactor: 1.3 });
+      doc.setTextColor(...MID);
+      const raw   = `"${response.question3}"`;
+      const lines = doc.splitTextToSize(raw, cellW - 4) as string[];
+      const maxL  = 2;
+      const clipped = lines.slice(0, maxL);
+      if (lines.length > maxL) clipped[maxL - 1] = clipped[maxL - 1].replace(/.{0,3}$/, '…');
+      doc.text(clipped, cx + cellW / 2, textY + 14, { align: 'center', lineHeightFactor: 1.3 });
     }
   });
 
   doc.save(`album-promo-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-// Kept for backward compatibility
 export const generatePDF = generateClassicPDF;
