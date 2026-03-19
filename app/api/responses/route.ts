@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
+    const existing = await prisma.response.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' } }
+    });
+
+    if (existing) {
+      return NextResponse.json({ error: 'Vous avez déjà soumis un message avec ce nom.' }, { status: 409 });
+    }
+
     const response = await prisma.response.create({
       data: {
         name,
