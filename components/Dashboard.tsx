@@ -6,7 +6,6 @@ import { Response, QUESTIONS } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
 import { generateClassicPDF, generateAlbumPDF } from '@/lib/pdf';
 
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin2024';
 const CYCLE_DURATION = 35;
 const QUESTION_KEYS = ['question1', 'question2', 'question3'] as const;
 
@@ -21,6 +20,8 @@ export default function Dashboard() {
   const [timeLeft, setTimeLeft] = useState(CYCLE_DURATION);
   const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [isVerifying, setIsVerifying] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const auth = sessionStorage.getItem('adminAuth');
@@ -28,15 +29,29 @@ export default function Dashboard() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
-      sessionStorage.setItem('adminAuth', 'true');
-      setIsAuthenticated(true);
-      setPasswordError(false);
-    } else {
+    setIsVerifying(true);
+    try {
+      const res = await fetch('/api/auth/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput })
+      });
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('adminAuth', 'true');
+        setIsAuthenticated(true);
+        setPasswordError(false);
+      } else {
+        setPasswordError(true);
+        setPasswordInput('');
+      }
+    } catch {
       setPasswordError(true);
       setPasswordInput('');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -131,8 +146,8 @@ export default function Dashboard() {
               autoFocus
             />
             {passwordError && <p className="text-sm text-red-600">Mot de passe incorrect.</p>}
-            <button type="submit" className="w-full bg-[#A7B0BE] hover:bg-[#96A0AE] text-white font-semibold py-3 rounded-lg transition-all duration-200">
-              Accéder
+            <button disabled={isVerifying} type="submit" className="w-full bg-[#A7B0BE] hover:bg-[#96A0AE] text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50">
+              {isVerifying ? 'Vérification...' : 'Accéder'}
             </button>
           </form>
         </div>

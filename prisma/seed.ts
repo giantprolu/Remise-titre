@@ -1,4 +1,5 @@
 import { PrismaClient } from '../lib/generated/prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -131,6 +132,20 @@ async function main() {
     await prisma.response.create({ data: p });
     console.log('  OK ' + p.name);
   }
+  
+  const adminPassword = 'NathanLeMeilleur';
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  
+  await prisma.admin.upsert({
+    where: { id: 1 },
+    update: { password: hashedPassword },
+    create: {
+      id: 1,
+      password: hashedPassword,
+    },
+  });
+  console.log('\nAdmin créé/mis à jour avec succès.');
+  
   console.log('\n' + participants.length + ' participants inseres avec succes.');
 }
 

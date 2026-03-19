@@ -107,7 +107,7 @@ export function generateClassicPDF(responses: Response[]) {
       const yBase = topMargin + slot * sectionH;
 
       // ── En-tête nom ──────────────────────────────────────────────────────
-      const nameBarH = 20;
+      const nameBarH = 26;
 
       // Bloc nom : fond sage très léger
       doc.setFillColor(240, 246, 241);
@@ -119,16 +119,16 @@ export function generateClassicPDF(responses: Response[]) {
 
       // Photo si disponible
       const hasPhoto = !!r.photo;
-      const photoSz = 16;
+      const photoSz = 24;
       if (hasPhoto) {
-        doc.addImage(r.photo!, 'JPEG', PW - mH - photoSz, yBase + 2, photoSz, photoSz);
+        doc.addImage(r.photo!, 'JPEG', PW - mH - photoSz, yBase + 1, photoSz, photoSz);
       }
 
       // Nom
       doc.setFontSize(15);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...NAVY);
-      doc.text(r.name, mH + 8, yBase + 9);
+      doc.text(r.name, mH + 8, yBase + 11);
 
       // Date
       doc.setFontSize(8);
@@ -137,7 +137,7 @@ export function generateClassicPDF(responses: Response[]) {
       const dateStr = new Date(r.createdAt).toLocaleDateString('fr-FR', {
         day: 'numeric', month: 'long', year: 'numeric',
       });
-      doc.text(dateStr, mH + 8, yBase + 16);
+      doc.text(dateStr, mH + 8, yBase + 19);
 
       // ── Questions ────────────────────────────────────────────────────────
       const qItems = [
@@ -324,7 +324,7 @@ export function generateAlbumPDF(responses: Response[]) {
 
     // Citation Q3
     if (response.question3) {
-      doc.setFontSize(7);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(...MID);
       const raw   = `"${response.question3}"`;
@@ -332,7 +332,7 @@ export function generateAlbumPDF(responses: Response[]) {
       const maxL  = 2;
       const clipped = lines.slice(0, maxL);
       if (lines.length > maxL) clipped[maxL - 1] = clipped[maxL - 1].replace(/.{0,3}$/, '…');
-      doc.text(clipped, cx + cellW / 2, textY + 14, { align: 'center', lineHeightFactor: 1.3 });
+      doc.text(clipped, cx + cellW / 2, textY + 16, { align: 'center', lineHeightFactor: 1.3 });
     }
   });
 

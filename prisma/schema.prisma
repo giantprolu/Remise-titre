@@ -24,3 +24,8 @@ model Response {
 
   @@map("responses")
 }
+
+model Admin {
+  id       Int    @id @default(1)
+  password String // Hashed password
+}
