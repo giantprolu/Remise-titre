@@ -89,52 +89,35 @@ function ParticipateForm() {
 
     validateToken();
 
-    // Check if user has submitted before
+    // Check server-side if the previously submitted response still exists
     const savedResponseId = localStorage.getItem('userResponseId');
     const savedFormData = localStorage.getItem('userFormData');
-    const submissionTimestamp = localStorage.getItem('submissionTimestamp');
-    const resetTimestamp = localStorage.getItem('resetTimestamp');
 
-    // If there's a reset timestamp but the saved data doesn't have a submission timestamp,
-    // it means the data is from before the reset feature - clear it
-    if (savedResponseId && resetTimestamp && !submissionTimestamp) {
-      console.log('[Participate] Clearing old data without submission timestamp');
-      localStorage.removeItem('userResponseId');
-      localStorage.removeItem('userFormData');
-      // Don't set hasSubmittedBefore - user can participate again
-    }
-    // Check if a reset happened after the user's submission
-    else if (savedResponseId && submissionTimestamp && resetTimestamp) {
-      const submitted = parseInt(submissionTimestamp);
-      const reset = parseInt(resetTimestamp);
-
-      if (reset > submitted) {
-        // Reset happened after submission, clear user data to allow re-participation
-        console.log('[Participate] Reset detected after submission, clearing data');
-        localStorage.removeItem('userResponseId');
-        localStorage.removeItem('userFormData');
-        localStorage.removeItem('submissionTimestamp');
-        // Don't remove resetTimestamp, keep it for future checks
-        // Don't set hasSubmittedBefore - user can participate again
-      } else {
-        // User submitted after the last reset, restore their data
-        console.log('[Participate] Restoring user data from after last reset');
-        setHasSubmittedBefore(true);
-        setResponseId(savedResponseId);
-
-        if (savedFormData) {
-          setFormData(JSON.parse(savedFormData));
-        }
-      }
-    } else if (savedResponseId && !resetTimestamp) {
-      // No reset has ever happened, restore user data
-      console.log('[Participate] No reset timestamp, restoring user data');
-      setHasSubmittedBefore(true);
-      setResponseId(savedResponseId);
-
-      if (savedFormData) {
-        setFormData(JSON.parse(savedFormData));
-      }
+    if (savedResponseId) {
+      fetch(`/api/responses/${savedResponseId}`)
+        .then((res) => {
+          if (res.ok) {
+            // Response still exists → user already submitted
+            setHasSubmittedBefore(true);
+            setResponseId(savedResponseId);
+            if (savedFormData) {
+              setFormData(JSON.parse(savedFormData));
+            }
+          } else {
+            // Response was deleted or reset → clear and allow resubmission
+            localStorage.removeItem('userResponseId');
+            localStorage.removeItem('userFormData');
+            localStorage.removeItem('submissionTimestamp');
+            localStorage.removeItem('resetTimestamp');
+          }
+        })
+        .catch(() => {
+          // Network error: fail open, let the user try again
+          localStorage.removeItem('userResponseId');
+          localStorage.removeItem('userFormData');
+          localStorage.removeItem('submissionTimestamp');
+          localStorage.removeItem('resetTimestamp');
+        });
     }
 
     // Listen for reset events to allow re-participation
@@ -176,10 +159,24 @@ function ParticipateForm() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const ARTICLE_WORDS = ['un', 'une', 'le', 'la', 'les', 'de', 'du', 'des', 'et', 'en', 'à', 'au', 'aux', 'ce', 'cet', 'cette', 'ça', 'ca', 'il', 'elle', 'je', 'tu', 'nous', 'vous', 'on', 'y', 'lui', 'eux', 'mon', 'ma', 'ton', 'ta', 'son', 'sa', 'nos', 'vos', 'ses', 'mes', 'tes', 'or', 'ni', 'car'];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError('');
+
+    const q2 = formData.question2.trim();
+    if (q2.split(/\s+/).filter(Boolean).length > 1) {
+      setSubmitError('La question 2 n\'accepte qu\'un seul mot.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (ARTICLE_WORDS.includes(q2.toLowerCase())) {
+      setSubmitError('Choisissez un mot plus descriptif pour la question 2 (pas un article ou mot court).');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/responses', {

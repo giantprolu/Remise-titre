@@ -24,12 +24,12 @@ export const QUESTIONS = [
   },
   {
     id: 'question 2',
-    label: 'Un mot pour décrire cette promotion ?',
+    label: 'Un mot pour décrire cette promo ?',
     placeholder: 'Un seul mot...'
   },
   {
     id: 'question 3',
-    label: 'Un message pour l\'avenir ?',
+    label: 'Un message pour ton futur toi ?',
     placeholder: 'Votre message...'
   }
 ] as const;

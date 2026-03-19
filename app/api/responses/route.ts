@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const full = request.nextUrl.searchParams.get('full') === '1';
     const responses = await prisma.response.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        question1: true,
+        question2: true,
+        question3: true,
+        createdAt: true,
+        // photo uniquement quand explicitement demandé (export PDF)
+        ...(full ? { photo: true } : {}),
+      },
     });
     return NextResponse.json(responses);
   } catch (error) {

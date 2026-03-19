@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Response, QUESTIONS } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
 import DecorativeClouds from './DecorativeClouds';
-import { generatePDF } from '@/lib/pdf';
+import { generateClassicPDF, generateAlbumPDF } from '@/lib/pdf';
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin2024';
 const CYCLE_DURATION = 35; // seconds per question
@@ -59,7 +59,7 @@ export default function Dashboard() {
     fetchResponses();
     const interval = setInterval(() => {
       if (!isPaused) fetchResponses();
-    }, 3000);
+    }, 5000); // 5s — assez réactif, sans saturer le réseau avec les données
     return () => clearInterval(interval);
   }, [isPaused, fetchResponses, isAuthenticated]);
 
@@ -107,8 +107,16 @@ export default function Dashboard() {
     }
   };
 
-  const handleExportPDF = () => {
-    generatePDF(responses);
+  const handleExportPDF = async () => {
+    const res = await fetch('/api/responses?full=1');
+    const full = await res.json();
+    generateClassicPDF(full);
+  };
+
+  const handleExportAlbum = async () => {
+    const res = await fetch('/api/responses?full=1');
+    const full = await res.json();
+    generateAlbumPDF(full);
   };
 
   const questionKey = QUESTIONS[currentQuestionIndex].id as 'question1' | 'question2' | 'question3';
@@ -190,7 +198,14 @@ export default function Dashboard() {
                 disabled={responses.length === 0}
                 className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Exporter PDF
+                Livre d&apos;or PDF
+              </button>
+              <button
+                onClick={handleExportAlbum}
+                disabled={responses.length === 0}
+                className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Album PDF
               </button>
               <button
                 onClick={handleReset}
@@ -282,15 +297,26 @@ export default function Dashboard() {
   }
 
   // ─── Cloud view (default) ──────────────────────────────────────────────────
+  const MAX_CLOUDS = 25;
+  const visibleResponses = responses.slice(0, MAX_CLOUDS);
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] relative">
-      <DecorativeClouds responses={responses} onDelete={handleDeleteOne} />
+      <DecorativeClouds responses={visibleResponses} onDelete={handleDeleteOne} />
 
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h1 className="text-2xl md:text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
-            Remise des Titres — Admin
-          </h1>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
+              Remise des Titres — Admin
+            </h1>
+            {responses.length > 0 && (
+              <p className="text-xs text-[#9CA3AF] mt-0.5">
+                {responses.length} message{responses.length > 1 ? 's' : ''}
+                {responses.length > MAX_CLOUDS && ` · ${MAX_CLOUDS} affichés`}
+              </p>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/qr"
@@ -348,7 +374,20 @@ export default function Dashboard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Exporter PDF
+                Livre d&apos;or PDF
+              </span>
+            </button>
+
+            <button
+              onClick={handleExportAlbum}
+              className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 ease-in-out shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={responses.length === 0}
+            >
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Album PDF
               </span>
             </button>
 
