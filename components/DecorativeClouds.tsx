@@ -92,6 +92,26 @@ export default function DecorativeClouds({ responses, onDelete }: DecorativeClou
               textAlign: 'center',
             }}
           >
+            {/* Photo + delete */}
+            {cloud.response.photo && (
+              <div className="relative mb-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cloud.response.photo}
+                  alt={cloud.response.name}
+                  style={{
+                    width: '100px',
+                    height: '100px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: `3px solid ${cloud.color.border}`,
+                    display: 'block',
+                    margin: '0 auto',
+                  }}
+                />
+              </div>
+            )}
+
             {/* Nom + delete */}
             <div className="flex items-start justify-between w-full mb-4 pb-3 border-b-2" style={{ borderColor: cloud.color.border }}>
               <h3

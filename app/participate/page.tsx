@@ -1,17 +1,41 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { QUESTIONS } from '@/types';
 
+function cropToSquare(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const size = 600;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.src = url;
+  });
+}
+
 function ParticipateForm() {
   const searchParams = useSearchParams();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     question1: '',
     question2: '',
-    question3: ''
+    question3: '',
+    photo: ''
   });
+  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [hasSubmittedBefore, setHasSubmittedBefore] = useState(false);
@@ -121,12 +145,8 @@ function ParticipateForm() {
       setHasSubmittedBefore(false);
       setResponseId(null);
       setIsSubmitted(false);
-      setFormData({
-        name: '',
-        question1: '',
-        question2: '',
-        question3: ''
-      });
+      setPhotoPreview('');
+      setFormData({ name: '', question1: '', question2: '', question3: '', photo: '' });
     };
 
     window.addEventListener('responsesReset', handleReset);
@@ -139,10 +159,21 @@ function ParticipateForm() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const base64 = await cropToSquare(file);
+    setPhotoPreview(base64);
+    setFormData((prev) => ({ ...prev, photo: base64 }));
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview('');
+    setFormData((prev) => ({ ...prev, photo: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -339,6 +370,51 @@ function ParticipateForm() {
                 required
                 className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#A7B0BE] focus:border-transparent outline-none transition-all text-[#2E2E2E] placeholder-[#9CA3AF]"
                 placeholder="Jean Dupont"
+              />
+            </div>
+
+            {/* Photo */}
+            <div>
+              <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">
+                Photo <span className="font-normal text-[#9CA3AF]">(optionnelle)</span>
+              </label>
+              {photoPreview ? (
+                <div className="flex items-start gap-4">
+                  <div className="relative w-28 h-28 flex-shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photoPreview}
+                      alt="Aperçu"
+                      className="w-28 h-28 object-cover rounded-xl border-2 border-[#E5E7EB]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="mt-1 text-sm text-red-500 hover:text-red-700 underline"
+                  >
+                    Supprimer la photo
+                  </button>
+                </div>
+              ) : (
+                <label
+                  htmlFor="photo-input"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E5E7EB] rounded-xl cursor-pointer hover:border-[#A7B0BE] hover:bg-[#F9FAFB] transition-all"
+                >
+                  <svg className="w-8 h-8 text-[#9CA3AF] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm text-[#9CA3AF]">Ajouter une photo</span>
+                  <span className="text-xs text-[#9CA3AF] mt-1">Sera recadrée en carré automatiquement</span>
+                </label>
+              )}
+              <input
+                ref={fileInputRef}
+                id="photo-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoChange}
               />
             </div>
 

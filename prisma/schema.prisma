@@ -19,6 +19,7 @@ model Response {
   question1 String
   question2 String
   question3 String
+  photo     String?
   createdAt DateTime @default(now())
 
   @@map("responses")

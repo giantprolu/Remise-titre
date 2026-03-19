@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import { Response, QUESTIONS } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
 import DecorativeClouds from './DecorativeClouds';
@@ -162,6 +163,16 @@ export default function Dashboard() {
               Remise des Titres — Admin
             </h1>
             <div className="flex flex-wrap gap-2">
+              <Link
+                href="/qr"
+                target="_blank"
+                className="px-4 py-2.5 bg-white text-[#2E2E2E] border border-[#E5E7EB] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6] flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
+                </svg>
+                QR Code
+              </Link>
               <button
                 onClick={() => { setViewMode('clouds'); }}
                 className="px-4 py-2.5 bg-[#9FB8A0] text-white border border-[#9FB8A0] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
@@ -206,7 +217,7 @@ export default function Dashboard() {
               <span className="text-xs font-medium text-[#9CA3AF] uppercase tracking-widest">
                 Question {currentQuestionIndex + 1} / {QUESTIONS.length}
               </span>
-              <span className="text-xs font-mono text-[#A7B0BE] bg-[#A7B0BE] bg-opacity-10 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-mono text-white bg-[#A7B0BE] px-2 py-0.5 rounded-full">
                 {timeLeft}s
               </span>
             </div>
@@ -238,6 +249,14 @@ export default function Dashboard() {
             <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
               {answers.map((r) => (
                 <div key={r.id} className="bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm flex gap-4 items-start">
+                  {r.photo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.photo}
+                      alt={r.name}
+                      className="w-14 h-14 object-cover rounded-lg border border-[#E5E7EB] flex-shrink-0"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1">{r.name}</p>
                     <p className="text-[#2E2E2E] leading-relaxed">{r[questionKey]}</p>
@@ -273,6 +292,16 @@ export default function Dashboard() {
             Remise des Titres — Admin
           </h1>
           <div className="flex flex-wrap gap-2">
+            <Link
+              href="/qr"
+              target="_blank"
+              className="px-4 py-2.5 bg-white text-[#2E2E2E] border border-[#E5E7EB] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6] flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
+              </svg>
+              QR Code
+            </Link>
             <button
               onClick={() => { setViewMode('cycle'); setCurrentQuestionIndex(0); setTimeLeft(CYCLE_DURATION); }}
               className="px-4 py-2.5 bg-[#D6D3C4] hover:bg-[#C8C5B6] text-[#2E2E2E] border border-[#D6D3C4] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
