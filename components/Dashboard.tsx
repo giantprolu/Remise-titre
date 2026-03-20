@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Response, QUESTIONS } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
+import WordCloud from './WordCloud';
+import ScrollingColumns from './ScrollingColumns';
 import { generateClassicPDF, generateAlbumPDF } from '@/lib/pdf';
 
 const CYCLE_DURATION = 35;
@@ -263,30 +265,51 @@ export default function Dashboard() {
           <div className="text-center py-20 text-[#9CA3AF]">
             <p className="text-lg">Aucune réponse pour cette question</p>
           </div>
-        ) : (
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-            {answers.map((r) => (
-              <div key={r.id} className="bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm flex gap-4 items-start">
-                {r.photo && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.photo} alt={r.name} className="w-14 h-14 object-cover rounded-lg border border-[#E5E7EB] flex-shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1">{r.name}</p>
-                  <p className="text-[#2E2E2E] leading-relaxed">{r[questionKey]}</p>
-                </div>
-                <button
-                  onClick={() => handleDeleteOne(r.id)}
-                  title="Supprimer ce message"
-                  className="flex-shrink-0 p-2 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+        ) : currentQuestionIndex === 1 ? (
+          /* Q2 — Nuage de mots */
+          <div className="max-w-5xl mx-auto">
+            <WordCloud responses={responses} />
           </div>
+        ) : (
+          /* Q1 / Q3 — 4 colonnes défilantes */
+          <div className="max-w-6xl mx-auto" style={{ height: '50vh' }}>
+            <ScrollingColumns
+              responses={responses}
+              questionKey={questionKey as 'question1' | 'question3'}
+            />
+          </div>
+        )}
+
+        {/* Admin — gestion des réponses */}
+        {answers.length > 0 && (
+          <details className="max-w-4xl mx-auto mt-10">
+            <summary className="cursor-pointer text-sm text-[#9CA3AF] hover:text-[#6B7280] transition-colors select-none">
+              Gestion des réponses ({answers.length})
+            </summary>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {answers.map((r) => (
+                <div key={r.id} className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex gap-3 items-start">
+                  {r.photo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={r.photo} alt={r.name} className="w-12 h-12 object-cover rounded-lg border border-[#E5E7EB] flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1">{r.name}</p>
+                    <p className="text-sm text-[#2E2E2E] leading-relaxed line-clamp-2">{r[questionKey]}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteOne(r.id)}
+                    title="Supprimer ce message"
+                    className="flex-shrink-0 p-2 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </details>
         )}
       </main>
 

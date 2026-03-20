@@ -51,9 +51,6 @@ export default function WordCloud({ responses }: WordCloudProps) {
 
   return (
     <div className="w-full flex flex-col items-center justify-center h-full">
-      <h2 className="text-xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-2">
-        Un mot pour décrire cette promotion
-      </h2>
       <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-8 max-w-6xl">
         {words.map((word) => (
           <span

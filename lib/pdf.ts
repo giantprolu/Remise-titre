@@ -21,6 +21,14 @@ function hline(doc: jsPDF, x: number, y: number, w: number, r: number, g: number
   doc.line(x, y, x + w, y);
 }
 
+function drawBrandBar(doc: jsPDF, y: number, h: number, pageWidth: number) {
+  const barW = pageWidth / BRAND_COLORS.length;
+  BRAND_COLORS.forEach((c, i) => {
+    doc.setFillColor(c.r, c.g, c.b);
+    doc.rect(i * barW, y, barW + 0.5, h, 'F');
+  });
+}
+
 // ─── PDF Livre d'Or (2 personnes / page, design soigné) ───────────────────────
 
 export function generateClassicPDF(responses: Response[]) {
@@ -68,6 +76,9 @@ export function generateClassicPDF(responses: Response[]) {
     `${responses.length} participant${responses.length > 1 ? 's' : ''}`,
     PW / 2, 156, { align: 'center' }
   );
+
+  // Barre de couleurs charte graphique
+  drawBrandBar(doc, 170, 3, PW);
 
   // Millésime en grand en bas
   doc.setFontSize(72);
@@ -148,8 +159,9 @@ export function generateClassicPDF(responses: Response[]) {
       let y = yBase + nameBarH + 7;
 
       qItems.forEach(({ label, text, style }, qi) => {
-        // Numéro de question dans un petit cercle accent
-        doc.setFillColor(...SAGE);
+        // Numéro de question dans un petit cercle accent (couleur charte)
+        const qColor = BRAND_COLORS[qi % BRAND_COLORS.length];
+        doc.setFillColor(qColor.r, qColor.g, qColor.b);
         doc.circle(mH + 3, y - 1, 3, 'F');
         doc.setFontSize(6.5);
         doc.setFont('helvetica', 'bold');
@@ -159,7 +171,7 @@ export function generateClassicPDF(responses: Response[]) {
         // Label question
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...SAGE);
+        doc.setTextColor(qColor.r, qColor.g, qColor.b);
         doc.text(label.toUpperCase(), mH + 9, y);
 
         y += 5.5;
@@ -237,6 +249,9 @@ export function generateAlbumPDF(responses: Response[]) {
   doc.setFontSize(9);
   doc.setTextColor(160, 200, 165);
   doc.text(`${responses.length} participant${responses.length > 1 ? 's' : ''}  ·  ${DATE_STR()}`, PW / 2, 126, { align: 'center' });
+
+  // Barre de couleurs charte graphique au-dessus de la bande basse
+  drawBrandBar(doc, PH - 18 - 3, 3, PW);
 
   // Année dans la bande basse
   doc.setFontSize(22);

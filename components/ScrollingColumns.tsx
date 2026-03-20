@@ -5,37 +5,28 @@ import { useMemo } from 'react';
 
 interface ScrollingColumnsProps {
   responses: Response[];
+  questionKey: 'question1' | 'question3';
 }
 
 interface ColumnItem {
   id: string;
   name: string;
   text: string;
-  label: string;
   color: (typeof BRAND_COLORS)[number];
 }
 
-export default function ScrollingColumns({ responses }: ScrollingColumnsProps) {
+export default function ScrollingColumns({ responses, questionKey }: ScrollingColumnsProps) {
   const columns = useMemo(() => {
     const items: ColumnItem[] = [];
 
     responses.forEach((r, i) => {
-      if (r.question1.trim()) {
+      const text = r[questionKey].trim();
+      if (text) {
         items.push({
-          id: `${r.id}-q1`,
+          id: r.id,
           name: r.name,
-          text: r.question1,
-          label: 'Souvenir',
+          text,
           color: BRAND_COLORS[i % BRAND_COLORS.length],
-        });
-      }
-      if (r.question3.trim()) {
-        items.push({
-          id: `${r.id}-q3`,
-          name: r.name,
-          text: r.question3,
-          label: 'Message',
-          color: BRAND_COLORS[(i + 3) % BRAND_COLORS.length],
         });
       }
     });
@@ -46,7 +37,7 @@ export default function ScrollingColumns({ responses }: ScrollingColumnsProps) {
     });
 
     return cols;
-  }, [responses]);
+  }, [responses, questionKey]);
 
   const nonEmptyCols = columns.filter((col) => col.length > 0);
 
@@ -77,23 +68,12 @@ export default function ScrollingColumns({ responses }: ScrollingColumnsProps) {
                     borderLeft: `3px solid ${item.color.hex}`,
                   }}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <p
-                      className="text-xs font-semibold"
-                      style={{ color: item.color.hex }}
-                    >
-                      {item.name}
-                    </p>
-                    <span
-                      className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                      style={{
-                        backgroundColor: `rgba(${item.color.r}, ${item.color.g}, ${item.color.b}, 0.15)`,
-                        color: item.color.hex,
-                      }}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
+                  <p
+                    className="text-xs font-semibold mb-1"
+                    style={{ color: item.color.hex }}
+                  >
+                    {item.name}
+                  </p>
                   <p className="text-sm text-[#2E2E2E] leading-snug">
                     {item.text}
                   </p>

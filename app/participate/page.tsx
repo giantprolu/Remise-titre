@@ -44,6 +44,7 @@ function ParticipateForm() {
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
   const [tokenError, setTokenError] = useState('');
+  const [responseDeleted, setResponseDeleted] = useState(false);
 
   useEffect(() => {
     // Validate token first
