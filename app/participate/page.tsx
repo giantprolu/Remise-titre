@@ -1,21 +1,45 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { QUESTIONS } from '@/types';
 
+function cropToSquare(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const size = 600;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.src = url;
+  });
+}
+
 function ParticipateForm() {
   const searchParams = useSearchParams();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     question1: '',
     question2: '',
-    question3: ''
+    question3: '',
+    photo: ''
   });
+  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [hasSubmittedBefore, setHasSubmittedBefore] = useState(false);
-  const [responseDeleted, setResponseDeleted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [, setResponseId] = useState<string | null>(null);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
@@ -65,105 +89,36 @@ function ParticipateForm() {
 
     validateToken();
 
-    // Check if user has submitted before and if their response still exists
-    const checkUserSubmission = async () => {
-      const savedResponseId = localStorage.getItem('userResponseId');
-      const savedFormData = localStorage.getItem('userFormData');
-      const submissionTimestamp = localStorage.getItem('submissionTimestamp');
-      const resetTimestamp = localStorage.getItem('resetTimestamp');
+    // Check server-side if the previously submitted response still exists
+    const savedResponseId = localStorage.getItem('userResponseId');
+    const savedFormData = localStorage.getItem('userFormData');
 
-      // If there's a reset timestamp but the saved data doesn't have a submission timestamp,
-      // it means the data is from before the reset feature - clear it
-      if (savedResponseId && resetTimestamp && !submissionTimestamp) {
-        console.log('[Participate] Clearing old data without submission timestamp');
-        localStorage.removeItem('userResponseId');
-        localStorage.removeItem('userFormData');
-        // Don't set hasSubmittedBefore - user can participate again
-        return;
-      }
-      
-      // Check if a reset happened after the user's submission
-      if (savedResponseId && submissionTimestamp && resetTimestamp) {
-        const submitted = parseInt(submissionTimestamp);
-        const reset = parseInt(resetTimestamp);
-
-        if (reset > submitted) {
-          // Reset happened after submission - check if response still exists in DB
-          try {
-            const res = await fetch('/api/responses');
-            const responses = await res.json();
-            const responseStillExists = responses.some((r: { id: string }) => r.id === savedResponseId);
-
-            if (!responseStillExists) {
-              // Response was deleted - show empty non-editable form
-              console.log('[Participate] Response was deleted after reset');
-              setHasSubmittedBefore(true);
-              setResponseDeleted(true);
-              if (savedFormData) {
-                setFormData(JSON.parse(savedFormData));
-              }
-              return;
-            }
-          } catch (error) {
-            console.error('Error checking if response exists:', error);
-          }
-
-          // Reset happened after submission but response doesn't exist, allow re-participation
-          console.log('[Participate] Reset detected after submission, clearing data');
-          localStorage.removeItem('userResponseId');
-          localStorage.removeItem('userFormData');
-          localStorage.removeItem('submissionTimestamp');
-          return;
-        } else {
-          // User submitted after the last reset, restore their data
-          console.log('[Participate] Restoring user data from after last reset');
-          setHasSubmittedBefore(true);
-          setResponseId(savedResponseId);
-
-          if (savedFormData) {
-            setFormData(JSON.parse(savedFormData));
-          }
-        }
-      } else if (savedResponseId && !resetTimestamp) {
-        // No reset has ever happened, check if response still exists
-        try {
-          const res = await fetch('/api/responses');
-          const responses = await res.json();
-          const responseStillExists = responses.some((r: { id: string }) => r.id === savedResponseId);
-
-          if (!responseStillExists && responses.length === 0) {
-            // Dashboard is empty (reset without setting timestamp), show read-only form
-            console.log('[Participate] Dashboard is empty, response was deleted');
+    if (savedResponseId) {
+      fetch(`/api/responses/${savedResponseId}`)
+        .then((res) => {
+          if (res.ok) {
+            // Response still exists → user already submitted
             setHasSubmittedBefore(true);
-            setResponseDeleted(true);
+            setResponseId(savedResponseId);
             if (savedFormData) {
               setFormData(JSON.parse(savedFormData));
             }
-            return;
-          } else if (!responseStillExists) {
-            // Response doesn't exist but there are other responses - allow re-participation
-            console.log('[Participate] Response not found, allowing re-participation');
+          } else {
+            // Response was deleted or reset → clear and allow resubmission
             localStorage.removeItem('userResponseId');
             localStorage.removeItem('userFormData');
             localStorage.removeItem('submissionTimestamp');
-            return;
+            localStorage.removeItem('resetTimestamp');
           }
-        } catch (error) {
-          console.error('Error checking if response exists:', error);
-        }
-
-        // Response exists, restore user data
-        console.log('[Participate] No reset timestamp, restoring user data');
-        setHasSubmittedBefore(true);
-        setResponseId(savedResponseId);
-
-        if (savedFormData) {
-          setFormData(JSON.parse(savedFormData));
-        }
-      }
-    };
-
-    checkUserSubmission();
+        })
+        .catch(() => {
+          // Network error: fail open, let the user try again
+          localStorage.removeItem('userResponseId');
+          localStorage.removeItem('userFormData');
+          localStorage.removeItem('submissionTimestamp');
+          localStorage.removeItem('resetTimestamp');
+        });
+    }
 
     // Listen for reset events to allow re-participation
     const handleReset = () => {
@@ -173,12 +128,8 @@ function ParticipateForm() {
       setHasSubmittedBefore(false);
       setResponseId(null);
       setIsSubmitted(false);
-      setFormData({
-        name: '',
-        question1: '',
-        question2: '',
-        question3: ''
-      });
+      setPhotoPreview('');
+      setFormData({ name: '', question1: '', question2: '', question3: '', photo: '' });
     };
 
     window.addEventListener('responsesReset', handleReset);
@@ -191,15 +142,41 @@ function ParticipateForm() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const base64 = await cropToSquare(file);
+    setPhotoPreview(base64);
+    setFormData((prev) => ({ ...prev, photo: base64 }));
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview('');
+    setFormData((prev) => ({ ...prev, photo: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const ARTICLE_WORDS = ['un', 'une', 'le', 'la', 'les', 'de', 'du', 'des', 'et', 'en', 'à', 'au', 'aux', 'ce', 'cet', 'cette', 'ça', 'ca', 'il', 'elle', 'je', 'tu', 'nous', 'vous', 'on', 'y', 'lui', 'eux', 'mon', 'ma', 'ton', 'ta', 'son', 'sa', 'nos', 'vos', 'ses', 'mes', 'tes', 'or', 'ni', 'car'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError('');
+
+    const q2 = formData.question2.trim();
+    if (q2.split(/\s+/).filter(Boolean).length > 1) {
+      setSubmitError('La question 2 n\'accepte qu\'un seul mot.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (ARTICLE_WORDS.includes(q2.toLowerCase())) {
+      setSubmitError('Choisissez un mot plus descriptif pour la question 2 (pas un article ou mot court).');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/responses', {
@@ -220,12 +197,15 @@ function ParticipateForm() {
         setResponseId(data.id);
         setIsSubmitted(true);
         setHasSubmittedBefore(true);
+      } else if (response.status === 409) {
+        const data = await response.json();
+        setSubmitError(data.error || 'Ce nom a déjà été utilisé pour soumettre un message.');
       } else {
-        alert('Une erreur est survenue. Veuillez réessayer.');
+        setSubmitError('Une erreur est survenue. Veuillez réessayer.');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Une erreur est survenue. Veuillez réessayer.');
+      setSubmitError('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
     }
@@ -431,6 +411,51 @@ function ParticipateForm() {
               />
             </div>
 
+            {/* Photo */}
+            <div>
+              <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">
+                Photo <span className="font-normal text-[#9CA3AF]">(optionnelle)</span>
+              </label>
+              {photoPreview ? (
+                <div className="flex items-start gap-4">
+                  <div className="relative w-28 h-28 flex-shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photoPreview}
+                      alt="Aperçu"
+                      className="w-28 h-28 object-cover rounded-xl border-2 border-[#E5E7EB]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="mt-1 text-sm text-red-500 hover:text-red-700 underline"
+                  >
+                    Supprimer la photo
+                  </button>
+                </div>
+              ) : (
+                <label
+                  htmlFor="photo-input"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E5E7EB] rounded-xl cursor-pointer hover:border-[#A7B0BE] hover:bg-[#F9FAFB] transition-all"
+                >
+                  <svg className="w-8 h-8 text-[#9CA3AF] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm text-[#9CA3AF]">Ajouter une photo</span>
+                  <span className="text-xs text-[#9CA3AF] mt-1">Sera recadrée en carré automatiquement</span>
+                </label>
+              )}
+              <input
+                ref={fileInputRef}
+                id="photo-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+            </div>
+
             {/* Question 1 */}
             <div>
               <label
@@ -490,6 +515,18 @@ function ParticipateForm() {
                 placeholder={QUESTIONS[2].placeholder}
               />
             </div>
+
+            {/* Error Message */}
+            {submitError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700 flex items-center gap-2">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  {submitError}
+                </p>
+              </div>
+            )}
 
             {/* Submit Button */}
             <button

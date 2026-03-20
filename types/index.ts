@@ -4,6 +4,7 @@ export interface Response {
   question1: string;
   question2: string;
   question3: string;
+  photo?: string | null;
   createdAt: Date;
 }
 
@@ -12,6 +13,7 @@ export interface FormData {
   question1: string;
   question2: string;
   question3: string;
+  photo?: string;
 }
 
 export const BRAND_COLORS = [
@@ -26,18 +28,18 @@ export const BRAND_COLORS = [
 
 export const QUESTIONS = [
   {
-    id: 'question1',
-    label: 'Quel est votre souvenir le plus marquant de ces 4 années?',
+    id: 'question 1',
+    label: 'Quel est votre souvenir le plus marquant de ces 2 années ?',
     placeholder: 'Partagez votre souvenir...'
   },
   {
-    id: 'question2',
-    label: 'Un mot pour décrire cette promotion?',
+    id: 'question 2',
+    label: 'Un mot pour décrire cette promo ?',
     placeholder: 'Un seul mot...'
   },
   {
-    id: 'question3',
-    label: 'Un message pour l\'avenir?',
+    id: 'question 3',
+    label: 'Un message pour ton futur toi ?',
     placeholder: 'Votre message...'
   }
 ] as const;

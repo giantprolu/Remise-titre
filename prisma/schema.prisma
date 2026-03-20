@@ -19,16 +19,13 @@ model Response {
   question1 String
   question2 String
   question3 String
+  photo     String?
   createdAt DateTime @default(now())
 
   @@map("responses")
 }
 
-model Token {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-
-  @@map("tokens")
+model Admin {
+  id       Int    @id @default(1)
+  password String // Hashed password
 }

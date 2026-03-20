@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 
 interface DecorativeCloudsProps {
   responses: Response[];
+  onDelete?: (id: string) => void;
 }
 
 // Palette de couleurs pour les nuages
@@ -27,7 +28,7 @@ const CLOUD_SHAPES = [
   '48% 52% 52% 48% / 52% 48% 52% 48%',
 ];
 
-export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
+export default function DecorativeClouds({ responses, onDelete }: DecorativeCloudsProps) {
   // Générer les propriétés pour chaque réponse/nuage
   const clouds = useMemo(() => {
     return responses.map((response, index) => {
@@ -91,16 +92,47 @@ export default function DecorativeClouds({ responses }: DecorativeCloudsProps) {
               textAlign: 'center',
             }}
           >
-            {/* Nom */}
-            <h3
-              className="text-2xl font-bold font-['Playfair_Display'] mb-4 pb-3 border-b-2 w-full text-center"
-              style={{
-                color: cloud.color.text,
-                borderColor: cloud.color.border,
-              }}
-            >
-              {cloud.response.name}
-            </h3>
+            {/* Photo + delete */}
+            {cloud.response.photo && (
+              <div className="relative mb-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cloud.response.photo}
+                  alt={cloud.response.name}
+                  style={{
+                    width: '100px',
+                    height: '100px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: `3px solid ${cloud.color.border}`,
+                    display: 'block',
+                    margin: '0 auto',
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Nom + delete */}
+            <div className="flex items-start justify-between w-full mb-4 pb-3 border-b-2" style={{ borderColor: cloud.color.border }}>
+              <h3
+                className="text-2xl font-bold font-['Playfair_Display'] flex-1 text-center"
+                style={{ color: cloud.color.text }}
+              >
+                {cloud.response.name}
+              </h3>
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(cloud.response.id)}
+                  title="Supprimer ce message"
+                  className="ml-2 p-1.5 rounded-lg opacity-40 hover:opacity-100 hover:bg-red-100 transition-all flex-shrink-0"
+                  style={{ color: cloud.color.text }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
+            </div>
 
             {/* Contenu */}
             <div className="space-y-3 w-full">
