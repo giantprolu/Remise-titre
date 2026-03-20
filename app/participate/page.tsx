@@ -15,6 +15,7 @@ function ParticipateForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [hasSubmittedBefore, setHasSubmittedBefore] = useState(false);
+  const [responseDeleted, setResponseDeleted] = useState(false);
   const [, setResponseId] = useState<string | null>(null);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
@@ -64,36 +65,95 @@ function ParticipateForm() {
 
     validateToken();
 
-    // Check if user has submitted before
-    const savedResponseId = localStorage.getItem('userResponseId');
-    const savedFormData = localStorage.getItem('userFormData');
-    const submissionTimestamp = localStorage.getItem('submissionTimestamp');
-    const resetTimestamp = localStorage.getItem('resetTimestamp');
+    // Check if user has submitted before and if their response still exists
+    const checkUserSubmission = async () => {
+      const savedResponseId = localStorage.getItem('userResponseId');
+      const savedFormData = localStorage.getItem('userFormData');
+      const submissionTimestamp = localStorage.getItem('submissionTimestamp');
+      const resetTimestamp = localStorage.getItem('resetTimestamp');
 
-    // If there's a reset timestamp but the saved data doesn't have a submission timestamp,
-    // it means the data is from before the reset feature - clear it
-    if (savedResponseId && resetTimestamp && !submissionTimestamp) {
-      console.log('[Participate] Clearing old data without submission timestamp');
-      localStorage.removeItem('userResponseId');
-      localStorage.removeItem('userFormData');
-      // Don't set hasSubmittedBefore - user can participate again
-    }
-    // Check if a reset happened after the user's submission
-    else if (savedResponseId && submissionTimestamp && resetTimestamp) {
-      const submitted = parseInt(submissionTimestamp);
-      const reset = parseInt(resetTimestamp);
-
-      if (reset > submitted) {
-        // Reset happened after submission, clear user data to allow re-participation
-        console.log('[Participate] Reset detected after submission, clearing data');
+      // If there's a reset timestamp but the saved data doesn't have a submission timestamp,
+      // it means the data is from before the reset feature - clear it
+      if (savedResponseId && resetTimestamp && !submissionTimestamp) {
+        console.log('[Participate] Clearing old data without submission timestamp');
         localStorage.removeItem('userResponseId');
         localStorage.removeItem('userFormData');
-        localStorage.removeItem('submissionTimestamp');
-        // Don't remove resetTimestamp, keep it for future checks
         // Don't set hasSubmittedBefore - user can participate again
-      } else {
-        // User submitted after the last reset, restore their data
-        console.log('[Participate] Restoring user data from after last reset');
+        return;
+      }
+      
+      // Check if a reset happened after the user's submission
+      if (savedResponseId && submissionTimestamp && resetTimestamp) {
+        const submitted = parseInt(submissionTimestamp);
+        const reset = parseInt(resetTimestamp);
+
+        if (reset > submitted) {
+          // Reset happened after submission - check if response still exists in DB
+          try {
+            const res = await fetch('/api/responses');
+            const responses = await res.json();
+            const responseStillExists = responses.some((r: { id: string }) => r.id === savedResponseId);
+
+            if (!responseStillExists) {
+              // Response was deleted - show empty non-editable form
+              console.log('[Participate] Response was deleted after reset');
+              setHasSubmittedBefore(true);
+              setResponseDeleted(true);
+              if (savedFormData) {
+                setFormData(JSON.parse(savedFormData));
+              }
+              return;
+            }
+          } catch (error) {
+            console.error('Error checking if response exists:', error);
+          }
+
+          // Reset happened after submission but response doesn't exist, allow re-participation
+          console.log('[Participate] Reset detected after submission, clearing data');
+          localStorage.removeItem('userResponseId');
+          localStorage.removeItem('userFormData');
+          localStorage.removeItem('submissionTimestamp');
+          return;
+        } else {
+          // User submitted after the last reset, restore their data
+          console.log('[Participate] Restoring user data from after last reset');
+          setHasSubmittedBefore(true);
+          setResponseId(savedResponseId);
+
+          if (savedFormData) {
+            setFormData(JSON.parse(savedFormData));
+          }
+        }
+      } else if (savedResponseId && !resetTimestamp) {
+        // No reset has ever happened, check if response still exists
+        try {
+          const res = await fetch('/api/responses');
+          const responses = await res.json();
+          const responseStillExists = responses.some((r: { id: string }) => r.id === savedResponseId);
+
+          if (!responseStillExists && responses.length === 0) {
+            // Dashboard is empty (reset without setting timestamp), show read-only form
+            console.log('[Participate] Dashboard is empty, response was deleted');
+            setHasSubmittedBefore(true);
+            setResponseDeleted(true);
+            if (savedFormData) {
+              setFormData(JSON.parse(savedFormData));
+            }
+            return;
+          } else if (!responseStillExists) {
+            // Response doesn't exist but there are other responses - allow re-participation
+            console.log('[Participate] Response not found, allowing re-participation');
+            localStorage.removeItem('userResponseId');
+            localStorage.removeItem('userFormData');
+            localStorage.removeItem('submissionTimestamp');
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking if response exists:', error);
+        }
+
+        // Response exists, restore user data
+        console.log('[Participate] No reset timestamp, restoring user data');
         setHasSubmittedBefore(true);
         setResponseId(savedResponseId);
 
@@ -101,16 +161,9 @@ function ParticipateForm() {
           setFormData(JSON.parse(savedFormData));
         }
       }
-    } else if (savedResponseId && !resetTimestamp) {
-      // No reset has ever happened, restore user data
-      console.log('[Participate] No reset timestamp, restoring user data');
-      setHasSubmittedBefore(true);
-      setResponseId(savedResponseId);
+    };
 
-      if (savedFormData) {
-        setFormData(JSON.parse(savedFormData));
-      }
-    }
+    checkUserSubmission();
 
     // Listen for reset events to allow re-participation
     const handleReset = () => {
@@ -238,6 +291,47 @@ function ParticipateForm() {
           </h2>
           <p className="text-[#6B7280] mb-6">
             {tokenError}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show read-only view if response was deleted
+  if (responseDeleted) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-10 h-10 text-[#A7B0BE]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+            Livre d&apos;or réinitialisé
+          </h2>
+          <p className="text-[#6B7280] mb-6">
+            Le livre d&apos;or a été réinitialisé. Votre participation précédente a été supprimée.
+          </p>
+          <div className="bg-[#F3F4F6] rounded-lg p-4 text-left">
+            <p className="text-sm font-medium text-[#6B7280] mb-2">Votre message précédent :</p>
+            <p className="text-sm text-[#2E2E2E]"><strong>Nom :</strong> {formData.name || 'Non renseigné'}</p>
+            <p className="text-sm text-[#2E2E2E] mt-1 truncate"><strong>Réponse :</strong> {formData.question1?.substring(0, 50) || 'Non renseigné'}{formData.question1?.length > 50 ? '...' : ''}</p>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mt-4">
+            Vous ne pouvez plus participer à cette session.
           </p>
         </div>
       </div>

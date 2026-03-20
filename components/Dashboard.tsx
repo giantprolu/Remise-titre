@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Response } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
-import DecorativeClouds from './DecorativeClouds';
+import WordCloud from './WordCloud';
+import ScrollingColumns from './ScrollingColumns';
 import { generatePDF } from '@/lib/pdf';
 
 export default function Dashboard() {
@@ -36,7 +37,6 @@ export default function Dashboard() {
       try {
         await fetch('/api/responses', { method: 'DELETE' });
         setResponses([]);
-        // Broadcast reset event to allow re-participation
         if (typeof window !== 'undefined') {
           localStorage.setItem('resetTimestamp', Date.now().toString());
           window.dispatchEvent(new CustomEvent('responsesReset'));
@@ -52,18 +52,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] relative">
-      {/* Nuages avec les réponses */}
-      <DecorativeClouds responses={responses} />
-
+    <div className="h-screen bg-[#FAFAFA] relative flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-20 shadow-sm">
+      <header className="bg-white border-b border-[#E5E7EB] z-20 shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h1 className="text-2xl md:text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
             Remise des Titres
           </h1>
           <div className="flex flex-wrap gap-2">
-            {/* Pause Button - Improved UX/UI */}
             <button
               onClick={() => setIsPaused(!isPaused)}
               className={`px-4 py-2.5 border rounded-lg text-sm font-medium transition-all duration-200 ease-in-out shadow-sm hover:shadow-md ${
@@ -124,27 +120,37 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content - Message si vide */}
-      {responses.length === 0 && (
-        <main className="pt-32 pb-32 px-4 md:px-8 relative z-10">
-          <div className="max-w-[900px] mx-auto">
-            <div className="text-center py-32">
-              <div className="mb-6">
-                <svg className="w-20 h-20 text-[#9CA3AF] mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-              </div>
-              <p className="text-2xl font-['Playfair_Display'] text-[#6B7280] mb-2">
-                Livre d&apos;or vide
-              </p>
-              <p className="text-base text-[#9CA3AF]">
-                En attente des premières réponses...
-              </p>
-              <p className="text-sm text-[#9CA3AF] mt-4">
-                ☁️ Les réponses apparaîtront sous forme de nuages flottants
-              </p>
+      {/* Main Content */}
+      {responses.length === 0 ? (
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="mb-6">
+              <svg className="w-20 h-20 text-[#9CA3AF] mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
             </div>
+            <p className="text-2xl font-['Playfair_Display'] text-[#6B7280] mb-2">
+              Livre d&apos;or vide
+            </p>
+            <p className="text-base text-[#9CA3AF]">
+              En attente des premières réponses...
+            </p>
+            <p className="text-sm text-[#9CA3AF] mt-4">
+              Scannez le QR code pour participer
+            </p>
           </div>
+        </main>
+      ) : (
+        <main className="flex-1 flex flex-col px-6 py-4 gap-3 min-h-0 overflow-hidden">
+          {/* Word Cloud - Question 2 */}
+          <section className="flex-[2] min-h-0 flex items-center justify-center overflow-hidden">
+            <WordCloud responses={responses} />
+          </section>
+
+          {/* Scrolling Columns - Questions 1 & 3 */}
+          <section className="flex-[3] min-h-0 overflow-hidden">
+            <ScrollingColumns responses={responses} />
+          </section>
         </main>
       )}
 

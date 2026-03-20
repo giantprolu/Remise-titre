@@ -23,3 +23,12 @@ model Response {
 
   @@map("responses")
 }
+
+model Token {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@map("tokens")
+}

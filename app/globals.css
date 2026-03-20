@@ -160,3 +160,18 @@ body {
     transform: scale(1.1);
   }
 }
+
+/* Animation de défilement vertical pour les colonnes */
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+/* Pause au survol */
+.scrolling-col:hover .scroll-column-inner {
+  animation-play-state: paused;
+}
