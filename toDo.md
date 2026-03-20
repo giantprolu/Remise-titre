@@ -1,7 +1,0 @@
-- [ ] sur le pdf album mettre un peu plus gros les reponses entre ""
-- [ ] mettre la photo un peu plus grosse sur le pdf l'ivre d'or
-- [ ] le mdp admin doit être en base sécurisé et ça doit être : NathanLeMeilleur
-- [ ] fait moi un mail pour que j'envoie au équipe de l'école pour leur :
-    - [ ] présenter toutes les fonctionnalités 
-    - [ ] le mdp admin : NathanLeMeilleur
-    - [ ] leur proposer de me faire un retour pour tout changeemnt ou modification que je ferais avec plaisir et directement

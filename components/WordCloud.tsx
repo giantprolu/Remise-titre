@@ -35,7 +35,7 @@ export default function WordCloud({ responses }: WordCloudProps) {
           : (word.count - minCount) / (maxCount - minCount);
       const fontSize = 1.2 + ratio * 3.3; // 1.2rem to 4.5rem
       const color = BRAND_COLORS[index % BRAND_COLORS.length];
-      const rotation = ((index * 7) % 5 - 2) * 3; // -6 to 6 degrees
+      const rotation = 0;
 
       return {
         text: word.display,

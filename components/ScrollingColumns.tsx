@@ -31,9 +31,9 @@ export default function ScrollingColumns({ responses, questionKey }: ScrollingCo
       }
     });
 
-    const cols: ColumnItem[][] = [[], [], [], []];
+    const cols: ColumnItem[][] = [[], [], []];
     items.forEach((item, i) => {
-      cols[i % 4].push(item);
+      cols[i % 3].push(item);
     });
 
     return cols;
@@ -48,7 +48,7 @@ export default function ScrollingColumns({ responses, questionKey }: ScrollingCo
       <div
         className="grid gap-3 flex-1 overflow-hidden min-h-0"
         style={{
-          gridTemplateColumns: `repeat(${Math.min(nonEmptyCols.length, 4)}, 1fr)`,
+          gridTemplateColumns: `repeat(${Math.min(nonEmptyCols.length, 3)}, 1fr)`,
         }}
       >
         {nonEmptyCols.map((col, colIndex) => (

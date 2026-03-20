@@ -17,13 +17,13 @@ export interface FormData {
 }
 
 export const BRAND_COLORS = [
-  { r: 75, g: 95, b: 153, hex: '#4B5F99' },
-  { r: 228, g: 128, b: 62, hex: '#E4803E' },
-  { r: 250, g: 207, b: 83, hex: '#FACF53' },
-  { r: 143, g: 190, b: 84, hex: '#8FBE54' },
-  { r: 54, g: 182, b: 212, hex: '#36B6D4' },
-  { r: 217, g: 71, b: 89, hex: '#D94759' },
-  { r: 38, g: 30, b: 72, hex: '#261E48' },
+  { r: 91, g: 127, b: 166, hex: '#5B7FA6' },
+  { r: 123, g: 158, b: 135, hex: '#7B9E87' },
+  { r: 160, g: 128, b: 112, hex: '#A08070' },
+  { r: 139, g: 123, b: 170, hex: '#8B7BAA' },
+  { r: 90, g: 138, b: 138, hex: '#5A8A8A' },
+  { r: 158, g: 139, b: 107, hex: '#9E8B6B' },
+  { r: 61, g: 89, b: 117, hex: '#3D5975' },
 ] as const;
 
 export const QUESTIONS = [

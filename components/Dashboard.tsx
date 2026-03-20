@@ -23,6 +23,7 @@ export default function Dashboard() {
   const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -166,56 +167,80 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#FAFAFA]">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
-              Remise des Titres — Admin
-            </h1>
-            {responses.length > 0 && (
-              <p className="text-xs text-[#9CA3AF] mt-0.5">
-                {responses.length} message{responses.length > 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/qr"
-              target="_blank"
-              className="px-4 py-2.5 bg-white text-[#2E2E2E] border border-[#E5E7EB] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6] flex items-center gap-2"
+        {isNavCollapsed ? (
+          <div className="flex items-center justify-between px-4 py-2">
+            <span className="text-sm font-['Playfair_Display'] text-[#9CA3AF]">Remise des Titres</span>
+            <button
+              onClick={() => setIsNavCollapsed(false)}
+              className="p-1.5 text-[#9CA3AF] hover:text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-all text-xs flex items-center gap-1"
+              title="Afficher la barre de navigation"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              QR Code
-            </Link>
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className={`px-4 py-2.5 border rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md ${isPaused ? 'bg-[#9FB8A0] text-white border-[#9FB8A0]' : 'bg-white text-[#2E2E2E] border-[#E5E7EB] hover:bg-[#F3F4F6]'}`}
-            >
-              {isPaused ? 'Reprendre' : 'Pause'}
-            </button>
-            <button
-              onClick={handleExportPDF}
-              disabled={responses.length === 0}
-              className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Livre d&apos;or PDF
-            </button>
-            <button
-              onClick={handleExportAlbum}
-              disabled={responses.length === 0}
-              className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Album PDF
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              Réinitialiser
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-6 md:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
+                Remise des Titres — Admin
+              </h1>
+              {responses.length > 0 && (
+                <p className="text-xs text-[#9CA3AF] mt-0.5">
+                  {responses.length} message{responses.length > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/qr"
+                target="_blank"
+                className="px-4 py-2.5 bg-white text-[#2E2E2E] border border-[#E5E7EB] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6] flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
+                </svg>
+                QR Code
+              </Link>
+              <button
+                onClick={() => setIsPaused(!isPaused)}
+                className={`px-4 py-2.5 border rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md ${isPaused ? 'bg-[#9FB8A0] text-white border-[#9FB8A0]' : 'bg-white text-[#2E2E2E] border-[#E5E7EB] hover:bg-[#F3F4F6]'}`}
+              >
+                {isPaused ? 'Reprendre' : 'Pause'}
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={responses.length === 0}
+                className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Livre d&apos;or PDF
+              </button>
+              <button
+                onClick={handleExportAlbum}
+                disabled={responses.length === 0}
+                className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Album PDF
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                Réinitialiser
+              </button>
+              <button
+                onClick={() => setIsNavCollapsed(true)}
+                className="px-3 py-2.5 bg-white text-[#9CA3AF] border border-[#E5E7EB] rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6]"
+                title="Réduire la barre de navigation"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
         {/* Progress bar */}
         <div className="h-1 bg-[#E5E7EB]">
           <div className="h-1 bg-[#A7B0BE] transition-all duration-1000 ease-linear" style={{ width: `${progress}%` }} />
@@ -223,7 +248,7 @@ export default function Dashboard() {
       </header>
 
       {/* Question display */}
-      <main className="pt-28 pb-16 px-6 md:px-10">
+      <main className={`${isNavCollapsed ? 'pt-12' : 'pt-28'} pb-16 px-6 md:px-10 transition-all duration-300`}>
         <div className="max-w-4xl mx-auto mb-10 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-xs font-medium text-[#9CA3AF] uppercase tracking-widest">
