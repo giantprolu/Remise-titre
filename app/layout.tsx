@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Remise des Titres - 4ème Année",
-  description: "Livre d'or numérique pour la cérémonie de remise des titres",
+  title: "Remise des Titres EPSI - 4ème Année",
+  description: "Livre d'or numérique pour la cérémonie de remise des titres EPSI",
 };
 
 export default function RootLayout({

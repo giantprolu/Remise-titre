@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
         name: true,
         question1: true,
         question2: true,
+        isAnonymous: true,
         createdAt: true,
         // photo uniquement quand explicitement demandé (export PDF)
         ...(full ? { photo: true } : {}),
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, question1, question2, photo } = body;
+    const { name, question1, question2, photo, isAnonymous } = body;
 
     if (!name || !question1 || !question2) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -37,7 +38,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      return NextResponse.json({ error: 'Vous avez déjà soumis un message avec ce nom.' }, { status: 409 });
+      const updated = await prisma.response.update({
+        where: { id: existing.id },
+        data: {
+          question1,
+          question2,
+          photo: isAnonymous ? null : (photo ?? existing.photo),
+          isAnonymous: isAnonymous ?? false
+        }
+      });
+      return NextResponse.json(updated, { status: 200 });
     }
 
     const response = await prisma.response.create({
@@ -45,7 +55,8 @@ export async function POST(request: NextRequest) {
         name,
         question1,
         question2,
-        photo: photo ?? null
+        photo: isAnonymous ? null : (photo ?? null),
+        isAnonymous: isAnonymous ?? false
       }
     });
 

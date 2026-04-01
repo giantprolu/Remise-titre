@@ -31,6 +31,9 @@ const CLOUD_SHAPES = [
 ];
 
 export default function ResponseCard({ response, index = 0, mode = 'live', isAnonymous = false }: ResponseCardProps) {
+  const isNameAnonymous = response.name.toLowerCase() === 'anonymous' || response.name.toLowerCase() === 'anonyme';
+  const actuallyAnonymous = isAnonymous || response.isAnonymous || isNameAnonymous;
+
   // Génération d'un style aléatoire mais constant pour chaque réponse
   const cardStyle = useMemo(() => {
     const seed = response.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -56,7 +59,7 @@ export default function ResponseCard({ response, index = 0, mode = 'live', isAno
       }}
     >
       {/* Header */}
-      {!isAnonymous && (
+      {!actuallyAnonymous && (
         <div className="flex flex-col items-center space-y-4 mb-12">
           {response.photo && (
             <img src={response.photo} alt={response.name || 'User'} className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-lg border-4" style={{ borderColor: cardStyle.color.accent }} />

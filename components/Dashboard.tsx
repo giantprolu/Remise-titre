@@ -78,21 +78,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (responses.length === 0 || isPaused) return;
 
-    // Commencez la diapositive en mode anonyme
-    setIsAnonymous(true);
-    
-    // Affichez le nom après 3.5s
-    const anonymousTimer = setTimeout(() => {
-      setIsAnonymous(false);
-    }, 3500);
-
-    // Passez à la diapositive suivante après 7s
+    // Passez à la diapositive suivante après 5s
     const slideInterval = setTimeout(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % responses.length);
-    }, 7000);
+    }, 5000);
 
     return () => {
-      clearTimeout(anonymousTimer);
       clearTimeout(slideInterval);
     };
   }, [responses.length, isPaused, currentSlideIndex]);
@@ -186,15 +177,18 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="max-w-7xl mx-auto px-6 md:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820]">
-                Remise des Titres — Admin
-              </h1>
-              {responses.length > 0 && (
-                <p className="text-xs text-[#9CA3AF] mt-0.5">
-                  {responses.length} message{responses.length > 1 ? 's' : ''}
-                </p>
-              )}
+            <div className="flex items-center gap-4">
+              <img src="/logo-navbar.webp" alt="EPSI Logo" className="h-10" />
+              <div>
+                <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820]">
+                  Remise des Titres EPSI — Dashboard
+                </h1>
+                {responses.length > 0 && (
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">
+                    {responses.length} message{responses.length > 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Link
@@ -267,6 +261,7 @@ export default function Dashboard() {
           <div className="max-w-6xl mx-auto w-full flex-1 flex items-center justify-center p-4">
             {responses.length > 0 && currentSlideIndex < responses.length && (
               <ResponseCard
+                key={responses[currentSlideIndex].id}
                 response={responses[currentSlideIndex]}
                 isAnonymous={isAnonymous}
                 mode="live"

@@ -32,7 +32,8 @@ function ParticipateForm() {
     name: '',
     question1: '',
     question2: '',
-    photo: ''
+    photo: '',
+    isAnonymous: false
   });
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,7 +130,7 @@ function ParticipateForm() {
       setResponseId(null);
       setIsSubmitted(false);
       setPhotoPreview('');
-      setFormData({ name: '', question1: '', question2: '', photo: '' });
+      setFormData({ name: '', question1: '', question2: '', photo: '', isAnonymous: false });
     };
 
     window.addEventListener('responsesReset', handleReset);
@@ -398,10 +399,11 @@ function ParticipateForm() {
             </div>
 
             {/* Photo */}
-            <div>
-              <label className="block text-sm font-semibold text-[#101820] mb-2">
-                Photo <span className="font-normal text-[#9CA3AF]">(optionnelle)</span>
-              </label>
+            {!formData.isAnonymous && (
+              <div>
+                <label className="block text-sm font-semibold text-[#101820] mb-2">
+                  Photo <span className="font-normal text-[#9CA3AF]">(optionnelle)</span>
+                </label>
               {photoPreview ? (
                 <div className="flex items-start gap-4">
                   <div className="relative w-28 h-28 flex-shrink-0">
@@ -441,6 +443,7 @@ function ParticipateForm() {
                 onChange={handlePhotoChange}
               />
             </div>
+            )}
 
             {/* Question 1 */}
             <div>
@@ -480,6 +483,38 @@ function ParticipateForm() {
                 className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#6CAE36] focus:border-transparent outline-none transition-all resize-none text-[#101820] placeholder-[#9CA3AF]"
                 placeholder={QUESTIONS[1].placeholder}
               />
+            </div>
+
+            {/* Anonymous Toggle */}
+            <div className="flex items-center space-x-3 bg-[#F9FAFB] p-4 rounded-lg border border-[#E5E7EB]">
+              <input
+                type="checkbox"
+                id="isAnonymous"
+                name="isAnonymous"
+                checked={formData.isAnonymous}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  if (isChecked) {
+                    const confirmed = window.confirm("Attention, si vous choisissez de rester anonyme, votre message n'apparaîtra ni dans le livre d'or ni dans l'album photo. Voulez-vous continuer ?");
+                    if (!confirmed) {
+                      return;
+                    }
+                  }
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    isAnonymous: isChecked,
+                    ...(isChecked ? { photo: '' } : {})
+                  }));
+                  if (isChecked) {
+                    setPhotoPreview('');
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }
+                }}
+                className="w-5 h-5 text-[#4B4B99] bg-white border-[#E5E7EB] rounded cursor-pointer"
+              />
+              <label htmlFor="isAnonymous" className="text-sm font-medium text-[#101820] cursor-pointer select-none">
+                Je souhaite rester anonyme (mon nom n&apos;apparaîtra pas lors de l&apos;affichage en direct)
+              </label>
             </div>
 
             {/* Error Message */}

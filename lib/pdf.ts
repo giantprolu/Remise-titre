@@ -14,6 +14,15 @@ const DARK  = [30,  30,  30]  as const; // texte principal
 const MID   = [100, 100, 100] as const; // texte secondaire
 const LIGHT = [180, 180, 180] as const; // texte tertiaire / bordures
 
+const PALETTE_LIVRE = [
+  [220,  71,  89], // Couleur 1
+  [229, 131,  64], // Couleur 2
+  [250, 209,  84], // Couleur 3
+  [ 74,  75, 152], // Couleur 4
+  [ 56, 184, 214], // Couleur 5
+  [147,  91, 158], // Couleur 6
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function hline(doc: jsPDF, x: number, y: number, w: number, r: number, g: number, b: number, lw = 0.4) {
   doc.setDrawColor(r, g, b);
@@ -22,22 +31,46 @@ function hline(doc: jsPDF, x: number, y: number, w: number, r: number, g: number
 }
 
 function drawBrandBar(doc: jsPDF, y: number, h: number, pageWidth: number) {
-  const barW = pageWidth / BRAND_COLORS.length;
-  BRAND_COLORS.forEach((c, i) => {
-    doc.setFillColor(c.r, c.g, c.b);
+  const barW = pageWidth / PALETTE_LIVRE.length;
+  PALETTE_LIVRE.forEach((c, i) => {
+    doc.setFillColor(c[0], c[1], c[2]);
     doc.rect(i * barW, y, barW + 0.5, h, 'F');
   });
 }
 
 // ─── PDF Livre d'Or (2 personnes / page, design soigné) ───────────────────────
 
-export function generateClassicPDF(responses: Response[]) {
+const loadLogoAsPngDataUrl = async (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const scale = 3; // bonne résolution
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale || 300 * scale;
+      canvas.height = img.height * scale || 100 * scale;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0, img.width || 300, img.height || 100);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = '/logo-navbar.webp';
+  });
+};
+
+export async function generateClassicPDF(allResponses: Response[]) {
+  const responses = allResponses.filter(r => !r.isAnonymous);
   const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const PW   = doc.internal.pageSize.getWidth();   // 210
   const PH   = doc.internal.pageSize.getHeight();  // 297
   const mH   = 18;                                  // marge horizontale
   const cW   = PW - 2 * mH;                        // largeur de contenu
-
+  const logoPng = await loadLogoAsPngDataUrl();
   // ── Couverture ──────────────────────────────────────────────────────────────
   // Fond sable clair en pleine page
   doc.setFillColor(250, 248, 244);
@@ -52,29 +85,36 @@ export function generateClassicPDF(responses: Response[]) {
   doc.setLineWidth(0.8);
   doc.line(6, 0, 6, PH);
 
+  // Logo
+  if (logoPng) {
+    const logoW = 60;
+    const logoH = 35; // ajuster au besoin
+    doc.addImage(logoPng, 'PNG', (PW - logoW) / 2, 40, logoW, logoH);
+  }
+
   // Grand titre
   doc.setFontSize(48);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...NAVY);
-  doc.text('Livre d\'Or', PW / 2, 105, { align: 'center' });
+  doc.text('Livre d\'Or', PW / 2, 90, { align: 'center' });
 
   // Ligne décorative sous le titre
-  hline(doc, mH + 20, 114, cW - 40, ...SAGE, 1);
+  hline(doc, mH + 20, 100, cW - 40, ...SAGE, 1);
 
   doc.setFontSize(18);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MID);
-  doc.text('Remise des Titres', PW / 2, 128, { align: 'center' });
+  doc.text('Remise des Titres EPSI', PW / 2, 114, { align: 'center' });
 
   doc.setFontSize(13);
   doc.setTextColor(...LIGHT);
-  doc.text(DATE_STR(), PW / 2, 141, { align: 'center' });
+  doc.text(DATE_STR(), PW / 2, 127, { align: 'center' });
 
   doc.setFontSize(11);
   doc.setTextColor(...MID);
   doc.text(
     `${responses.length} participant${responses.length > 1 ? 's' : ''}`,
-    PW / 2, 156, { align: 'center' }
+    PW / 2, 142, { align: 'center' }
   );
 
   // Barre de couleurs charte graphique
@@ -84,7 +124,7 @@ export function generateClassicPDF(responses: Response[]) {
   doc.setFontSize(72);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...SAND);
-  doc.text(String(YEAR), PW / 2, 260, { align: 'center' });
+  doc.text(String(YEAR), PW / 2, 230, { align: 'center' });
 
   // ── Pages de réponses (2 par page) ─────────────────────────────────────────
   const perPage    = 2;
@@ -106,7 +146,7 @@ export function generateClassicPDF(responses: Response[]) {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...LIGHT);
-    doc.text(`Remise des Titres · ${YEAR}`, mH, PH - 8);
+    doc.text(`Remise des Titres EPSI · ${YEAR}`, mH, PH - 8);
     doc.text(`${p + 2} / ${Math.ceil(responses.length / perPage) + 1}`, PW - mH, PH - 8, { align: 'right' });
     hline(doc, mH, PH - 13, cW, ...SAND);
 
@@ -119,12 +159,19 @@ export function generateClassicPDF(responses: Response[]) {
       // ── En-tête nom ──────────────────────────────────────────────────────
       const nameBarH = 26;
 
-      // Bloc nom : fond sage très léger
-      doc.setFillColor(240, 246, 241);
+      const themeColor = PALETTE_LIVRE[idx % PALETTE_LIVRE.length];
+      const lightTheme = [
+        Math.round(255 - (255 - themeColor[0]) * 0.15),
+        Math.round(255 - (255 - themeColor[1]) * 0.15),
+        Math.round(255 - (255 - themeColor[2]) * 0.15)
+      ];
+
+      // Bloc nom : fond teinté très léger
+      doc.setFillColor(lightTheme[0], lightTheme[1], lightTheme[2]);
       doc.rect(mH, yBase, cW, nameBarH, 'F');
 
       // Trait gauche accent
-      doc.setFillColor(...SAGE);
+      doc.setFillColor(themeColor[0], themeColor[1], themeColor[2]);
       doc.rect(mH, yBase, 3, nameBarH, 'F');
 
       // Photo si disponible
@@ -158,9 +205,8 @@ export function generateClassicPDF(responses: Response[]) {
       let y = yBase + nameBarH + 7;
 
       qItems.forEach(({ label, text, style }, qi) => {
-        // Numéro de question dans un petit cercle accent (couleur charte)
-        const qColor = BRAND_COLORS[qi % BRAND_COLORS.length];
-        doc.setFillColor(qColor.r, qColor.g, qColor.b);
+        // Numéro de question dans un petit cercle (couleur du thème actuel)
+        doc.setFillColor(themeColor[0], themeColor[1], themeColor[2]);
         doc.circle(mH + 3, y - 1, 3, 'F');
         doc.setFontSize(6.5);
         doc.setFont('helvetica', 'bold');
@@ -170,7 +216,7 @@ export function generateClassicPDF(responses: Response[]) {
         // Label question
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(qColor.r, qColor.g, qColor.b);
+        doc.setTextColor(themeColor[0], themeColor[1], themeColor[2]);
         doc.text(label.toUpperCase(), mH + 9, y);
 
         y += 5.5;
@@ -208,10 +254,13 @@ const ALBUM_COLS    = 3;
 const ALBUM_ROWS    = 2;
 const ALBUM_PER_PAGE = ALBUM_COLS * ALBUM_ROWS;
 
-export function generateAlbumPDF(responses: Response[]) {
+export async function generateAlbumPDF(allResponses: Response[]) {
+  const responses = allResponses.filter(r => !r.isAnonymous);
   const doc  = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const PW   = doc.internal.pageSize.getWidth();   // 297
   const PH   = doc.internal.pageSize.getHeight();  // 210
+
+  const logoPng = await loadLogoAsPngDataUrl();
 
   const HEADER_H = 12;
   const mH = 10;
@@ -228,26 +277,43 @@ export function generateAlbumPDF(responses: Response[]) {
   const photoSz = Math.min(cellW * 0.75, cellH - 30); // carré, laisse 30mm pour le texte
 
   // ── Couverture ──────────────────────────────────────────────────────────────
-  doc.setFillColor(...NAVY);
+  // Fond sable clair en pleine page
+  doc.setFillColor(250, 248, 244);
   doc.rect(0, 0, PW, PH, 'F');
+
+  // Bande latérale gauche navy
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, 6, PH, 'F');
+
+  // Ligne décorative à droite de la bande
+  doc.setDrawColor(...SAGE);
+  doc.setLineWidth(0.8);
+  doc.line(6, 0, 6, PH);
 
   // Bande sage en bas
   doc.setFillColor(...SAGE);
   doc.rect(0, PH - 18, PW, 18, 'F');
 
+  // Logo
+  if (logoPng) {
+    const logoW = 60;
+    const logoH = 35; // ajuster au besoin
+    doc.addImage(logoPng, 'PNG', (PW - logoW) / 2, 25, logoW, logoH);
+  }
+
   doc.setFontSize(52);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('ALBUM PROMO', PW / 2, 90, { align: 'center' });
+  doc.setTextColor(...NAVY);
+  doc.text('ALBUM PROMO', PW / 2, 80, { align: 'center' });
 
   doc.setFontSize(20);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(200, 210, 240);
-  doc.text('Remise des Titres', PW / 2, 112, { align: 'center' });
+  doc.setTextColor(...MID);
+  doc.text('Remise des Titres EPSI', PW / 2, 100, { align: 'center' });
 
   doc.setFontSize(9);
-  doc.setTextColor(160, 200, 165);
-  doc.text(`${responses.length} participant${responses.length > 1 ? 's' : ''}  ·  ${DATE_STR()}`, PW / 2, 126, { align: 'center' });
+  doc.setTextColor(...MID);
+  doc.text(`${responses.length} participant${responses.length > 1 ? 's' : ''}  ·  ${DATE_STR()}`, PW / 2, 114, { align: 'center' });
 
   // Barre de couleurs charte graphique au-dessus de la bande basse
   drawBrandBar(doc, PH - 18 - 3, 3, PW);
@@ -276,7 +342,7 @@ export function generateAlbumPDF(responses: Response[]) {
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(200, 210, 240);
-      doc.text(`REMISE DES TITRES  ·  ${YEAR}`, PW / 2, 7.5, { align: 'center' });
+      doc.text(`REMISE DES TITRES EPSI  ·  ${YEAR}`, PW / 2, 7.5, { align: 'center' });
 
       // Trait accent sage sous le header
       doc.setDrawColor(...SAGE);

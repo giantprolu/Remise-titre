@@ -4,6 +4,7 @@ export interface Response {
   question1: string;
   question2: string;
   photo?: string | null;
+  isAnonymous: boolean;
   createdAt: Date;
 }
 
@@ -11,15 +12,17 @@ export interface FormData {
   name: string;
   question1: string;
   question2: string;
+  isAnonymous?: boolean;
   photo?: string;
 }
 
 export const BRAND_COLORS = [
-  { r: 108, g: 174, b: 54, hex: '#6CAE36' }, // EPSI Vert clair
-  { r: 92, g: 143, b: 43, hex: '#5C8F2B' },  // EPSI Vert moyen
-  { r: 16, g: 24, b: 32, hex: '#101820' },   // Noir/Gris foncé
-  { r: 84, g: 88, b: 90, hex: '#54585A' },   // Gris
-  { r: 136, g: 139, b: 141, hex: '#888B8D' },// Gris clair
+  { r: 220, g: 71,  b: 89,  hex: '#DC4759' }, // Couleur 1
+  { r: 229, g: 131, b: 64,  hex: '#E58340' }, // Couleur 2
+  { r: 250, g: 209, b: 84,  hex: '#FAD154' }, // Couleur 3
+  { r: 74,  g: 75,  b: 152, hex: '#4A4B98' }, // Couleur 4
+  { r: 56,  g: 184, b: 214, hex: '#38B8D6' }, // Couleur 5
+  { r: 147, g: 91,  b: 158, hex: '#935B9E' }, // Couleur 6
 ] as const;
 
 export const QUESTIONS = [
