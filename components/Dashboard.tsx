@@ -4,12 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Response, QUESTIONS } from '@/types';
 import QRCodeDisplay from './QRCodeDisplay';
-import WordCloud from './WordCloud';
-import ScrollingColumns from './ScrollingColumns';
+import ResponseCard from './ResponseCard';
 import { generateClassicPDF, generateAlbumPDF } from '@/lib/pdf';
 
-const CYCLE_DURATION = 35;
-const QUESTION_KEYS = ['question1', 'question2', 'question3'] as const;
 
 export default function Dashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,12 +15,13 @@ export default function Dashboard() {
 
   const [responses, setResponses] = useState<Response[]>([]);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(CYCLE_DURATION);
-  const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [isVerifying, setIsVerifying] = useState(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+
+  // New states for the requested features
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -77,21 +75,27 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [isPaused, fetchResponses, isAuthenticated]);
 
-  // Cycling timer
   useEffect(() => {
-    if (!isAuthenticated) return;
-    setTimeLeft(CYCLE_DURATION);
-    cycleRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setCurrentQuestionIndex((qi) => (qi + 1) % QUESTIONS.length);
-          return CYCLE_DURATION;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => { if (cycleRef.current) clearInterval(cycleRef.current); };
-  }, [isAuthenticated, currentQuestionIndex]);
+    if (responses.length === 0 || isPaused) return;
+
+    // Commencez la diapositive en mode anonyme
+    setIsAnonymous(true);
+    
+    // Affichez le nom après 3.5s
+    const anonymousTimer = setTimeout(() => {
+      setIsAnonymous(false);
+    }, 3500);
+
+    // Passez à la diapositive suivante après 7s
+    const slideInterval = setTimeout(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % responses.length);
+    }, 7000);
+
+    return () => {
+      clearTimeout(anonymousTimer);
+      clearTimeout(slideInterval);
+    };
+  }, [responses.length, isPaused, currentSlideIndex]);
 
   const handleReset = async () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer toutes les réponses ? Cela permettra à tout le monde de reparticiper.')) {
@@ -130,26 +134,26 @@ export default function Dashboard() {
   // ─── Password gate ─────────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F4F6FA] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-md p-10 max-w-sm w-full text-center">
-          <div className="w-16 h-16 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-[#A7B0BE]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-[#4B4B99] bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-[#4B4B99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-2">Espace Admin</h1>
-          <p className="text-sm text-[#6B7280] mb-6">Accès réservé aux organisateurs</p>
+          <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820] mb-2">Espace Admin</h1>
+          <p className="text-sm text-[#4b5563] mb-6">Accès réservé aux organisateurs</p>
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="password"
               value={passwordInput}
               onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
               placeholder="Mot de passe"
-              className={`w-full px-4 py-3 border rounded-lg outline-none transition-all text-[#2E2E2E] placeholder-[#9CA3AF] focus:ring-2 focus:ring-[#A7B0BE] focus:border-transparent ${passwordError ? 'border-red-400 bg-red-50' : 'border-[#E5E7EB]'}`}
+              className={`w-full px-4 py-3 border rounded-lg outline-none transition-all text-[#101820] placeholder-[#9CA3AF] focus:ring-2 focus:ring-[#4B4B99] focus:border-transparent ${passwordError ? 'border-red-400 bg-red-50' : 'border-[#E5E7EB]'}`}
               autoFocus
             />
             {passwordError && <p className="text-sm text-red-600">Mot de passe incorrect.</p>}
-            <button disabled={isVerifying} type="submit" className="w-full bg-[#A7B0BE] hover:bg-[#96A0AE] text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50">
+            <button disabled={isVerifying} type="submit" className="w-full bg-[#4B4B99] hover:bg-[#261E48] text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50">
               {isVerifying ? 'Vérification...' : 'Accéder'}
             </button>
           </form>
@@ -159,20 +163,20 @@ export default function Dashboard() {
   }
 
   // ─── Admin — vue questions ─────────────────────────────────────────────────
-  const questionKey = QUESTION_KEYS[currentQuestionIndex];
-  const answers = responses.filter((r) => r[questionKey]);
-  const progress = ((CYCLE_DURATION - timeLeft) / CYCLE_DURATION) * 100;
+  
+  const answers = responses;
+  
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#F4F6FA] flex flex-col pt-16">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white border-b border-[#E5E7EB] z-20 shadow-sm">
+      <header className="fixed w-full top-0 left-0 bg-white border-b border-[#E5E7EB] z-30 shadow-sm">
         {isNavCollapsed ? (
           <div className="flex items-center justify-between px-4 py-2">
             <span className="text-sm font-['Playfair_Display'] text-[#9CA3AF]">Remise des Titres</span>
             <button
               onClick={() => setIsNavCollapsed(false)}
-              className="p-1.5 text-[#9CA3AF] hover:text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-all text-xs flex items-center gap-1"
+              className="p-1.5 text-[#9CA3AF] hover:text-[#4b5563] hover:bg-[#F3F4F6] rounded-lg transition-all text-xs flex items-center gap-1"
               title="Afficher la barre de navigation"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +187,7 @@ export default function Dashboard() {
         ) : (
           <div className="max-w-7xl mx-auto px-6 md:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
+              <h1 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820]">
                 Remise des Titres — Admin
               </h1>
               {responses.length > 0 && (
@@ -192,11 +196,11 @@ export default function Dashboard() {
                 </p>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               <Link
                 href="/qr"
                 target="_blank"
-                className="px-4 py-2.5 bg-white text-[#2E2E2E] border border-[#E5E7EB] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6] flex items-center gap-2"
+                className="px-4 py-2.5 bg-white text-[#101820] border border-[#E5E7EB] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:bg-[#F3F4F6] flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6z" />
@@ -205,21 +209,21 @@ export default function Dashboard() {
               </Link>
               <button
                 onClick={() => setIsPaused(!isPaused)}
-                className={`px-4 py-2.5 border rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md ${isPaused ? 'bg-[#9FB8A0] text-white border-[#9FB8A0]' : 'bg-white text-[#2E2E2E] border-[#E5E7EB] hover:bg-[#F3F4F6]'}`}
+                className={`px-4 py-2.5 border rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md ${isPaused ? 'bg-[#261E48] text-white border-[#261E48]' : 'bg-white text-[#101820] border-[#E5E7EB] hover:bg-[#F3F4F6]'}`}
               >
                 {isPaused ? 'Reprendre' : 'Pause'}
               </button>
               <button
                 onClick={handleExportPDF}
                 disabled={responses.length === 0}
-                className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 bg-[#4B4B99] hover:bg-[#261E48] text-white border border-[#4B4B99] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Livre d&apos;or PDF
               </button>
               <button
                 onClick={handleExportAlbum}
                 disabled={responses.length === 0}
-                className="px-4 py-2.5 bg-[#A7B0BE] hover:bg-[#96A0AE] text-white border border-[#A7B0BE] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 bg-[#4B4B99] hover:bg-[#261E48] text-white border border-[#4B4B99] rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Album PDF
               </button>
@@ -241,42 +245,10 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-        {/* Progress bar */}
-        <div className="h-1 bg-[#E5E7EB]">
-          <div className="h-1 bg-[#A7B0BE] transition-all duration-1000 ease-linear" style={{ width: `${progress}%` }} />
-        </div>
       </header>
 
       {/* Question display */}
-      <main className={`${isNavCollapsed ? 'pt-12' : 'pt-28'} pb-16 px-6 md:px-10 transition-all duration-300`}>
-        <div className="max-w-4xl mx-auto mb-10 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="text-xs font-medium text-[#9CA3AF] uppercase tracking-widest">
-              Question {currentQuestionIndex + 1} / {QUESTIONS.length}
-            </span>
-            <span className="text-xs font-mono text-white bg-[#A7B0BE] px-2 py-0.5 rounded-full">
-              {timeLeft}s
-            </span>
-          </div>
-          <h2 className="text-2xl md:text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E]">
-            {QUESTIONS[currentQuestionIndex].label}
-          </h2>
-          <p className="text-sm text-[#9CA3AF] mt-2">{answers.length} réponse{answers.length !== 1 ? 's' : ''}</p>
-        </div>
-
-        {/* Navigation Q1 / Q2 / Q3 */}
-        <div className="flex justify-center gap-2 mb-10">
-          {QUESTIONS.map((q, i) => (
-            <button
-              key={q.id}
-              onClick={() => { setCurrentQuestionIndex(i); setTimeLeft(CYCLE_DURATION); }}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${i === currentQuestionIndex ? 'bg-[#2E2E2E] text-white' : 'bg-white border border-[#E5E7EB] text-[#6B7280] hover:bg-[#F3F4F6]'}`}
-            >
-              Q{i + 1}
-            </button>
-          ))}
-        </div>
-
+      <main className="flex-1 py-8 px-6 md:px-10 transition-all duration-300 flex flex-col">
         {/* Answers */}
         {responses.length === 0 ? (
           <div className="text-center py-32 text-[#9CA3AF]">
@@ -290,18 +262,16 @@ export default function Dashboard() {
           <div className="text-center py-20 text-[#9CA3AF]">
             <p className="text-lg">Aucune réponse pour cette question</p>
           </div>
-        ) : currentQuestionIndex === 1 ? (
-          /* Q2 — Nuage de mots */
-          <div className="max-w-5xl mx-auto">
-            <WordCloud responses={responses} />
-          </div>
         ) : (
-          /* Q1 / Q3 — 4 colonnes défilantes */
-          <div className="max-w-6xl mx-auto" style={{ height: '50vh' }}>
-            <ScrollingColumns
-              responses={responses}
-              questionKey={questionKey as 'question1' | 'question3'}
-            />
+          /* Q1 / Q2 — Diaporama (Slide Show) */
+          <div className="max-w-6xl mx-auto w-full flex-1 flex items-center justify-center p-4">
+            {responses.length > 0 && currentSlideIndex < responses.length && (
+              <ResponseCard
+                response={responses[currentSlideIndex]}
+                isAnonymous={isAnonymous}
+                mode="live"
+              />
+            )}
           </div>
         )}
 
@@ -320,7 +290,7 @@ export default function Dashboard() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1">{r.name}</p>
-                    <p className="text-sm text-[#2E2E2E] leading-relaxed line-clamp-2">{r[questionKey]}</p>
+                    <p className="text-sm text-[#101820] leading-relaxed line-clamp-2">{r.question1}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteOne(r.id)}

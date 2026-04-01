@@ -25,24 +25,23 @@ export default function WordCloud({ responses }: WordCloudProps) {
     const wordList = Object.values(frequency).sort((a, b) => b.count - a.count);
     if (wordList.length === 0) return [];
 
-    const maxCount = wordList[0].count;
-    const minCount = wordList[wordList.length - 1].count;
+    // Build ordered list of unique counts (descending) for rank-based sizing
+    const uniqueCounts = [...new Set(wordList.map((w) => w.count))].sort((a, b) => b - a);
 
     return wordList.map((word, index) => {
+      const level = uniqueCounts.indexOf(word.count); // 0 = most frequent
       const ratio =
-        maxCount === minCount
-          ? 0.5
-          : (word.count - minCount) / (maxCount - minCount);
+        uniqueCounts.length === 1
+          ? 1
+          : (uniqueCounts.length - 1 - level) / (uniqueCounts.length - 1);
       const fontSize = 1.2 + ratio * 3.3; // 1.2rem to 4.5rem
       const color = BRAND_COLORS[index % BRAND_COLORS.length];
-      const rotation = 0;
 
       return {
         text: word.display,
         count: word.count,
         fontSize,
         color,
-        rotation,
       };
     });
   }, [responses]);
@@ -59,7 +58,6 @@ export default function WordCloud({ responses }: WordCloudProps) {
             style={{
               fontSize: `${word.fontSize}rem`,
               color: word.color.hex,
-              transform: `rotate(${word.rotation}deg)`,
               lineHeight: 1.1,
             }}
             title={`${word.count} fois`}

@@ -9,15 +9,13 @@ interface DecorativeCloudsProps {
   onDelete?: (id: string) => void;
 }
 
-// Palette de couleurs pour les nuages
+// Palette de couleurs pour les nuages (Theme EPSI)
 const COLORS = [
-  { bg: 'rgba(255, 244, 230, 0.95)', border: '#F4A460', text: '#8B4513' }, // Sable
-  { bg: 'rgba(232, 245, 233, 0.95)', border: '#90C695', text: '#2E7D32' }, // Vert
-  { bg: 'rgba(227, 242, 253, 0.95)', border: '#7EB6D9', text: '#1565C0' }, // Bleu
-  { bg: 'rgba(252, 228, 236, 0.95)', border: '#E8A5C0', text: '#C2185B' }, // Rose
-  { bg: 'rgba(243, 229, 245, 0.95)', border: '#B5A8D6', text: '#7B1FA2' }, // Lavande
-  { bg: 'rgba(255, 249, 196, 0.95)', border: '#F5D547', text: '#F57F17' }, // Jaune
-  { bg: 'rgba(255, 235, 238, 0.95)', border: '#F08080', text: '#C62828' }, // Corail
+  { bg: 'rgba(255, 255, 255, 0.95)', border: '#4B4B99', text: '#261E48' }, // Primary
+  { bg: 'rgba(250, 248, 253, 0.95)', border: '#261E48', text: '#D94759' }, // Dark
+  { bg: 'rgba(255, 255, 255, 0.95)', border: '#D94759', text: '#4B4B99' }, // Gradient Light
+  { bg: 'rgba(253, 250, 245, 0.95)', border: '#FACF53', text: '#261E48' }, // Accent Jaune
+  { bg: 'rgba(240, 250, 240, 0.95)', border: '#8FBE54', text: '#261E48' }, // Accent Vert
 ];
 
 // Formes de nuages moins prononcées pour éviter le débordement
@@ -159,10 +157,10 @@ export default function DecorativeClouds({ responses, onDelete }: DecorativeClou
               {/* Question 3 */}
               <div>
                 <p className="text-xs font-medium uppercase mb-1" style={{ color: cloud.color.text, opacity: 0.7 }}>
-                  {QUESTIONS[2].label}
+                  {QUESTIONS[1].label}
                 </p>
                 <p className="text-sm leading-relaxed italic" style={{ color: cloud.color.text }}>
-                  {cloud.response.question3}
+                  {cloud.response.question2}
                 </p>
               </div>
             </div>

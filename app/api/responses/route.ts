@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
         name: true,
         question1: true,
         question2: true,
-        question3: true,
         createdAt: true,
         // photo uniquement quand explicitement demandé (export PDF)
         ...(full ? { photo: true } : {}),
@@ -27,9 +26,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, question1, question2, question3, photo } = body;
+    const { name, question1, question2, photo } = body;
 
-    if (!name || !question1 || !question2 || !question3) {
+    if (!name || !question1 || !question2) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest) {
         name,
         question1,
         question2,
-        question3,
         photo: photo ?? null
       }
     });

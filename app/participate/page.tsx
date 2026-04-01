@@ -32,7 +32,6 @@ function ParticipateForm() {
     name: '',
     question1: '',
     question2: '',
-    question3: '',
     photo: ''
   });
   const [photoPreview, setPhotoPreview] = useState<string>('');
@@ -130,7 +129,7 @@ function ParticipateForm() {
       setResponseId(null);
       setIsSubmitted(false);
       setPhotoPreview('');
-      setFormData({ name: '', question1: '', question2: '', question3: '', photo: '' });
+      setFormData({ name: '', question1: '', question2: '', photo: '' });
     };
 
     window.addEventListener('responsesReset', handleReset);
@@ -160,24 +159,10 @@ function ParticipateForm() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const ARTICLE_WORDS = ['un', 'une', 'le', 'la', 'les', 'de', 'du', 'des', 'et', 'en', 'à', 'au', 'aux', 'ce', 'cet', 'cette', 'ça', 'ca', 'il', 'elle', 'je', 'tu', 'nous', 'vous', 'on', 'y', 'lui', 'eux', 'mon', 'ma', 'ton', 'ta', 'son', 'sa', 'nos', 'vos', 'ses', 'mes', 'tes', 'or', 'ni', 'car'];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError('');
-
-    const q2 = formData.question2.trim();
-    if (q2.split(/\s+/).filter(Boolean).length > 1) {
-      setSubmitError('La question 2 n\'accepte qu\'un seul mot.');
-      setIsSubmitting(false);
-      return;
-    }
-    if (ARTICLE_WORDS.includes(q2.toLowerCase())) {
-      setSubmitError('Choisissez un mot plus descriptif pour la question 2 (pas un article ou mot court).');
-      setIsSubmitting(false);
-      return;
-    }
 
     try {
       const response = await fetch('/api/responses', {
@@ -218,9 +203,9 @@ function ParticipateForm() {
       <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
           <div className="mb-6">
-            <div className="w-20 h-20 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div className="w-20 h-20 bg-[#6CAE36] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
               <svg
-                className="w-10 h-10 text-[#A7B0BE] animate-spin"
+                className="w-10 h-10 text-[#6CAE36] animate-spin"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -234,7 +219,7 @@ function ParticipateForm() {
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820] mb-3">
             Vérification...
           </h2>
           <p className="text-[#6B7280]">
@@ -267,7 +252,7 @@ function ParticipateForm() {
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820] mb-3">
             Accès non autorisé
           </h2>
           <p className="text-[#6B7280] mb-6">
@@ -284,9 +269,9 @@ function ParticipateForm() {
       <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
           <div className="mb-6">
-            <div className="w-20 h-20 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 bg-[#6CAE36] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-10 h-10 text-[#A7B0BE]"
+                className="w-10 h-10 text-[#6CAE36]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -300,7 +285,7 @@ function ParticipateForm() {
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+          <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820] mb-3">
             Livre d&apos;or réinitialisé
           </h2>
           <p className="text-[#6B7280] mb-6">
@@ -308,8 +293,8 @@ function ParticipateForm() {
           </p>
           <div className="bg-[#F3F4F6] rounded-lg p-4 text-left">
             <p className="text-sm font-medium text-[#6B7280] mb-2">Votre message précédent :</p>
-            <p className="text-sm text-[#2E2E2E]"><strong>Nom :</strong> {formData.name || 'Non renseigné'}</p>
-            <p className="text-sm text-[#2E2E2E] mt-1 truncate"><strong>Réponse :</strong> {formData.question1?.substring(0, 50) || 'Non renseigné'}{formData.question1?.length > 50 ? '...' : ''}</p>
+            <p className="text-sm text-[#101820]"><strong>Nom :</strong> {formData.name || 'Non renseigné'}</p>
+            <p className="text-sm text-[#101820] mt-1 truncate"><strong>Réponse :</strong> {formData.question1?.substring(0, 50) || 'Non renseigné'}{formData.question1?.length > 50 ? '...' : ''}</p>
           </div>
           <p className="text-xs text-[#9CA3AF] mt-4">
             Vous ne pouvez plus participer à cette session.
@@ -324,9 +309,9 @@ function ParticipateForm() {
       <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center animate-fade-in">
           <div className="mb-6">
-            <div className="w-20 h-20 bg-[#9FB8A0] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 bg-[#6CAE36] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-10 h-10 text-[#9FB8A0]"
+                className="w-10 h-10 text-[#6CAE36]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -340,7 +325,7 @@ function ParticipateForm() {
               </svg>
             </div>
           </div>
-          <h2 className="text-3xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+          <h2 className="text-3xl font-['Playfair_Display'] font-semibold text-[#101820] mb-3">
             Merci !
           </h2>
           <p className="text-[#6B7280] text-lg mb-6">
@@ -352,7 +337,7 @@ function ParticipateForm() {
                 setIsSubmitted(false);
                 // Allow editing by not redirecting
               }}
-              className="px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#2E2E2E] border border-[#E5E7EB] rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+              className="px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#101820] border border-[#E5E7EB] rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Modifier mon message
             </button>
@@ -368,7 +353,7 @@ function ParticipateForm() {
         <div className="bg-white rounded-lg shadow-md p-8 md:p-12">
           {/* Header */}
           <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+            <h1 className="text-4xl md:text-5xl font-['Playfair_Display'] font-semibold text-[#101820] mb-3">
               {hasSubmittedBefore ? 'Modifier mon message' : 'Livre d\'Or'}
             </h1>
             <p className="text-[#6B7280] text-lg">
@@ -379,9 +364,9 @@ function ParticipateForm() {
           </div>
 
           {hasSubmittedBefore && (
-            <div className="mb-8 p-4 bg-[#9FB8A0] bg-opacity-10 border border-[#9FB8A0] rounded-lg">
-              <p className="text-sm text-[#2E2E2E] flex items-center gap-2">
-                <svg className="w-5 h-5 text-[#9FB8A0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-8 p-4 bg-[#6CAE36] bg-opacity-10 border border-[#6CAE36] rounded-lg">
+              <p className="text-sm text-[#101820] flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#6CAE36]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>
@@ -396,7 +381,7 @@ function ParticipateForm() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-semibold text-[#2E2E2E] mb-2"
+                className="block text-sm font-semibold text-[#101820] mb-2"
               >
                 Votre nom / prénom
               </label>
@@ -407,14 +392,14 @@ function ParticipateForm() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#A7B0BE] focus:border-transparent outline-none transition-all text-[#2E2E2E] placeholder-[#9CA3AF]"
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#6CAE36] focus:border-transparent outline-none transition-all text-[#101820] placeholder-[#9CA3AF]"
                 placeholder="Jean Dupont"
               />
             </div>
 
             {/* Photo */}
             <div>
-              <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">
+              <label className="block text-sm font-semibold text-[#101820] mb-2">
                 Photo <span className="font-normal text-[#9CA3AF]">(optionnelle)</span>
               </label>
               {photoPreview ? (
@@ -438,7 +423,7 @@ function ParticipateForm() {
               ) : (
                 <label
                   htmlFor="photo-input"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E5E7EB] rounded-xl cursor-pointer hover:border-[#A7B0BE] hover:bg-[#F9FAFB] transition-all"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E5E7EB] rounded-xl cursor-pointer hover:border-[#6CAE36] hover:bg-[#F9FAFB] transition-all"
                 >
                   <svg className="w-8 h-8 text-[#9CA3AF] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -461,7 +446,7 @@ function ParticipateForm() {
             <div>
               <label
                 htmlFor="question1"
-                className="block text-sm font-semibold text-[#2E2E2E] mb-2"
+                className="block text-sm font-semibold text-[#101820] mb-2"
               >
                 {QUESTIONS[0].label}
               </label>
@@ -472,7 +457,7 @@ function ParticipateForm() {
                 onChange={handleChange}
                 required
                 rows={4}
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#A7B0BE] focus:border-transparent outline-none transition-all resize-none text-[#2E2E2E] placeholder-[#9CA3AF]"
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#6CAE36] focus:border-transparent outline-none transition-all resize-none text-[#101820] placeholder-[#9CA3AF]"
                 placeholder={QUESTIONS[0].placeholder}
               />
             </div>
@@ -481,39 +466,19 @@ function ParticipateForm() {
             <div>
               <label
                 htmlFor="question2"
-                className="block text-sm font-semibold text-[#2E2E2E] mb-2"
+                className="block text-sm font-semibold text-[#101820] mb-2"
               >
                 {QUESTIONS[1].label}
               </label>
-              <input
-                type="text"
+              <textarea
                 id="question2"
                 name="question2"
                 value={formData.question2}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#A7B0BE] focus:border-transparent outline-none transition-all text-[#2E2E2E] placeholder-[#9CA3AF]"
-                placeholder={QUESTIONS[1].placeholder}
-              />
-            </div>
-
-            {/* Question 3 */}
-            <div>
-              <label
-                htmlFor="question3"
-                className="block text-sm font-semibold text-[#2E2E2E] mb-2"
-              >
-                {QUESTIONS[2].label}
-              </label>
-              <textarea
-                id="question3"
-                name="question3"
-                value={formData.question3}
-                onChange={handleChange}
-                required
                 rows={4}
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#A7B0BE] focus:border-transparent outline-none transition-all resize-none text-[#2E2E2E] placeholder-[#9CA3AF]"
-                placeholder={QUESTIONS[2].placeholder}
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#6CAE36] focus:border-transparent outline-none transition-all resize-none text-[#101820] placeholder-[#9CA3AF]"
+                placeholder={QUESTIONS[1].placeholder}
               />
             </div>
 
@@ -533,7 +498,7 @@ function ParticipateForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#A7B0BE] hover:bg-[#96A0AE] text-white font-semibold py-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#6CAE36] hover:bg-[#5A942A] text-white font-semibold py-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting
                 ? 'Envoi en cours...'
@@ -555,9 +520,9 @@ export default function ParticipatePage() {
         <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-md p-8 md:p-12 max-w-md w-full text-center">
             <div className="mb-6">
-              <div className="w-20 h-20 bg-[#A7B0BE] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <div className="w-20 h-20 bg-[#6CAE36] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                 <svg
-                  className="w-10 h-10 text-[#A7B0BE] animate-spin"
+                  className="w-10 h-10 text-[#6CAE36] animate-spin"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -571,7 +536,7 @@ export default function ParticipatePage() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#2E2E2E] mb-3">
+            <h2 className="text-2xl font-['Playfair_Display'] font-semibold text-[#101820] mb-3">
               Chargement...
             </h2>
             <p className="text-[#6B7280]">

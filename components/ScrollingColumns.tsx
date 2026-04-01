@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 
 interface ScrollingColumnsProps {
   responses: Response[];
-  questionKey: 'question1' | 'question3';
+  questionKey: 'question1' | 'question2';
 }
 
 interface ColumnItem {
@@ -52,17 +52,12 @@ export default function ScrollingColumns({ responses, questionKey }: ScrollingCo
         }}
       >
         {nonEmptyCols.map((col, colIndex) => (
-          <div key={colIndex} className="overflow-hidden relative scrolling-col">
-            <div
-              className="flex flex-col gap-2 scroll-column-inner"
-              style={{
-                animation: `scrollUp ${30 + colIndex * 10}s linear infinite`,
-              }}
-            >
-              {[...col, ...col].map((item, itemIndex) => (
+          <div key={colIndex} className="overflow-hidden flex flex-col justify-end">
+            <div className="flex flex-col gap-2">
+              {col.map((item) => (
                 <div
-                  key={`${item.id}-${itemIndex}`}
-                  className="p-3 rounded-lg"
+                  key={item.id}
+                  className="p-3 rounded-lg animate-fade-in"
                   style={{
                     backgroundColor: `rgba(${item.color.r}, ${item.color.g}, ${item.color.b}, 0.08)`,
                     borderLeft: `3px solid ${item.color.hex}`,
@@ -74,7 +69,7 @@ export default function ScrollingColumns({ responses, questionKey }: ScrollingCo
                   >
                     {item.name}
                   </p>
-                  <p className="text-sm text-[#2E2E2E] leading-snug">
+                  <p className="text-sm text-[#101820] leading-snug">
                     {item.text}
                   </p>
                 </div>

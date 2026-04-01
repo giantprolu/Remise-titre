@@ -17,8 +17,8 @@ export default function QRCodeDisplay() {
 
       if (canvasRef.current) {
         QRCode.toCanvas(canvasRef.current, participantUrl, {
-          width: 180,
-          margin: 2,
+          width: 200,
+          margin: 1,
           color: {
             dark: '#000000',
             light: '#ffffff'
@@ -42,7 +42,7 @@ export default function QRCodeDisplay() {
     return (
       <button
         onClick={() => setIsCollapsed(false)}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-white border border-[#E5E7EB] rounded-xl shadow-md flex items-center justify-center hover:shadow-lg transition-all z-30"
+        className="fixed bottom-2 right-2 w-10 h-10 bg-white border border-[#E5E7EB] rounded-lg shadow-md flex items-center justify-center hover:shadow-lg transition-all z-30"
         title="Afficher le QR code"
       >
         <svg className="w-6 h-6 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,9 +53,9 @@ export default function QRCodeDisplay() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-lg z-30">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-medium text-[#6B7280]">Scannez pour participer</p>
+    <div className="fixed bottom-2 right-2 bg-white border border-[#E5E7EB] rounded-2xl p-2 shadow-lg z-30">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[10px] font-medium text-[#6B7280]">Scannez pour participer</p>
         <button
           onClick={() => setIsCollapsed(true)}
           className="ml-3 p-1 text-[#9CA3AF] hover:text-[#6B7280] hover:bg-[#F3F4F6] rounded transition-all"

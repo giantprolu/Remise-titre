@@ -153,7 +153,6 @@ export function generateClassicPDF(responses: Response[]) {
       const qItems = [
         { label: QUESTIONS[0].label, text: r.question1, style: 'normal' as const },
         { label: QUESTIONS[1].label, text: r.question2, style: 'bolditalic' as const },
-        { label: QUESTIONS[2].label, text: r.question3, style: 'italic' as const },
       ];
 
       let y = yBase + nameBarH + 7;
@@ -337,11 +336,11 @@ export function generateAlbumPDF(responses: Response[]) {
     doc.text(String(YEAR), cx + cellW / 2, textY + 8, { align: 'center' });
 
     // Citation Q3
-    if (response.question3) {
+    if (response.question2) {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(...MID);
-      const raw   = `"${response.question3}"`;
+      const raw   = `"${response.question2}"`;
       const lines = doc.splitTextToSize(raw, cellW - 4) as string[];
       const maxL  = 2;
       const clipped = lines.slice(0, maxL);
